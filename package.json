@@ -1,0 +1,70 @@
+{
+  "name": "net-dhcp",
+  "version": "2.0.0",
+  "description": "NET//DHCP — Auto DHCP lease & device discovery — Broman Enterprises",
+  "main": "main.js",
+  "author": "Broman Enterprises",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^41.0.0",
+    "electron-builder": "^26.8.1"
+  },
+  "build": {
+    "appId": "net-dhcp",
+    "productName": "NET-DHCP",
+    "copyright": "Broman Enterprises",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "installer.nsh",
+      "package.json",
+      "assets/fonts/**/*",
+      "assets/icon.ico",
+      "assets/icon.png"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "requestedExecutionLevel": "requireAdministrator",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": true,
+      "include": "installer.nsh",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "NET-DHCP",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico"
+    },
+    "portable": {
+      "artifactName": "NET-DHCP-v${version}-portable.exe",
+      "requestExecutionLevel": "admin"
+    },
+    "asarUnpack": [
+      "assets/fonts/**/*"
+    ]
+  }
+}

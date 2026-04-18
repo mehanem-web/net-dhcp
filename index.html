@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>NET//DHCP</title>
+<style>
+@font-face {
+  font-family: 'Orbitron';
+  src: url('./assets/fonts/Orbitron-Variable.woff') format('woff');
+  font-weight: 100 900;
+  font-display: block;
+}
+@font-face {
+  font-family: 'Share Tech Mono';
+  src: url('./assets/fonts/ShareTechMono-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: block;
+}
+
+:root {
+  --ar: 255; --ag: 159; --ab: 10;
+  --bgr: 6; --bgg: 8; --bgb: 16;
+  --lr: 255; --lg: 224; --lb: 160;
+
+  --green:        rgb(var(--ar), var(--ag), var(--ab));
+  --green-dim:    rgba(var(--ar), var(--ag), var(--ab), 0.75);
+  --green-faint:  rgba(var(--ar), var(--ag), var(--ab), 0.22);
+  --green-ghost:  rgba(var(--ar), var(--ag), var(--ab), 0.10);
+  --border:       rgba(var(--ar), var(--ag), var(--ab), 0.25);
+  --border-bright:rgba(var(--ar), var(--ag), var(--ab), 0.65);
+  --bg:           rgba(var(--bgr), var(--bgg), var(--bgb), 0.97);
+  --surface:      rgba(16, 20, 31, 0.95);
+  --label:        rgb(var(--lr), var(--lg), var(--lb));
+
+  --red:   #ff3b5c;
+  --blue:  #00c8ff;
+  --amber: #ffcc44;
+  --dim:   rgba(var(--ar), var(--ag), var(--ab), 0.35);
+  --text:  #d8e4f0;
+
+  --mono:   'Share Tech Mono', monospace;
+  --hud:    'Orbitron', monospace;
+  --radius: 3px;
+}
+
+* { box-sizing:border-box; margin:0; padding:0; }
+
+body {
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--mono);
+  font-size:13px;
+  height:100vh;
+  overflow:hidden;
+  user-select:none;
+}
+
+body::after {
+  content:'';position:fixed;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.06) 2px,rgba(0,0,0,.06) 4px);
+  pointer-events:none;z-index:9999;
+}
+
+/* ── Titlebar ── */
+.titlebar {
+  -webkit-app-region:drag;
+  display:flex;align-items:center;justify-content:space-between;
+  height:48px;padding:0 16px;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  position:relative;
+}
+.titlebar::after {
+  content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--green),transparent);
+  opacity:.35;
+}
+.tb-left { display:flex;align-items:center;gap:10px; }
+.tb-logo {
+  width:30px;height:30px;
+  background:var(--green-ghost);border:1px solid var(--border);border-radius:var(--radius);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--hud);font-size:8px;font-weight:900;color:var(--green);
+  box-shadow:0 0 10px rgba(var(--ar),var(--ag),var(--ab),.12);
+}
+.tb-title {
+  font-family:var(--hud);font-size:15px;font-weight:900;letter-spacing:.2em;color:var(--green);
+  text-shadow:0 0 12px rgba(var(--ar),var(--ag),var(--ab),.75);
+}
+.tb-title em { color:rgba(var(--ar),var(--ag),var(--ab),.35);font-style:normal; }
+.tb-sub {
+  font-family:var(--hud);font-size:8px;font-weight:700;letter-spacing:.18em;margin-top:2px;
+  color:rgba(var(--ar),var(--ag),var(--ab),.3);
+}
+.tb-right { display:flex;align-items:center;gap:8px;-webkit-app-region:no-drag; }
+.tb-version { font-family:var(--hud);font-size:10px;font-weight:700;letter-spacing:.15em;color:rgba(var(--ar),var(--ag),var(--ab),.3); }
+
+.win-btn {
+  width:26px;height:26px;background:transparent;border:1px solid var(--border);
+  border-radius:var(--radius);color:rgba(var(--ar),var(--ag),var(--ab),.45);
+  font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+}
+.win-btn:hover { border-color:var(--green);color:var(--green);background:var(--green-ghost); }
+.win-btn.active { background:var(--green-ghost);border-color:var(--green);color:var(--green); }
+
+.win-controls { display:flex;gap:5px;align-items:center; }
+.wbtn { width:14px;height:14px;border-radius:50%;border:none;cursor:pointer;opacity:.8;transition:opacity .15s; }
+.wbtn:hover { opacity:1; }
+.wbtn.min { background:#ffd700; }
+.wbtn.cls { background:#ff3b5c; }
+
+/* ── Layout ── */
+.app { display:flex;flex-direction:column;gap:10px;padding:14px 16px;height:calc(100vh - 48px);overflow:hidden; }
+
+/* ── Labels ── */
+.lbl {
+  font-family:var(--hud);font-size:9px;font-weight:900;letter-spacing:.3em;
+  color:rgba(var(--ar),var(--ag),var(--ab),.38);text-transform:uppercase;margin-bottom:5px;
+  display:flex;align-items:center;gap:8px;
+}
+.lbl::after { content:'';flex:1;height:1px;background:var(--border); }
+
+/* ── Adapter row ── */
+.adapter-row { display:flex;gap:8px;align-items:stretch; }
+.adapter-select {
+  flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  color:var(--text);font-family:var(--mono);font-size:13px;font-weight:700;
+  padding:0 12px;appearance:none;cursor:pointer;transition:border-color .2s;height:38px;
+}
+.adapter-select:focus { outline:none;border-color:var(--green); }
+.adapter-select option { background:#0b0e18; }
+.adapter-status {
+  display:flex;align-items:center;gap:8px;padding:0 12px;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  font-family:var(--hud);font-size:9px;font-weight:700;letter-spacing:.1em;
+  color:rgba(var(--ar),var(--ag),var(--ab),.38);white-space:nowrap;height:38px;
+}
+.status-dot {
+  width:7px;height:7px;border-radius:50%;
+  background:rgba(var(--ar),var(--ag),var(--ab),.18);transition:all .3s;
+}
+.status-dot.active { background:var(--green);box-shadow:0 0 6px rgba(var(--ar),var(--ag),var(--ab),.6); }
+.status-dot.blink  { background:var(--amber);box-shadow:0 0 6px rgba(255,204,68,.7);animation:blink .7s ease-in-out infinite; }
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+
+/* ── Config grid ── */
+.config-grid { display:grid;grid-template-columns:1fr 1fr;gap:7px; }
+.cfg-field {
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:7px 12px;transition:border-color .2s;
+}
+.cfg-field:focus-within { border-color:rgba(var(--ar),var(--ag),var(--ab),.4); }
+.cfg-field.error { border-color:var(--red); }
+.cfg-label {
+  font-family:var(--hud);font-size:8px;font-weight:900;letter-spacing:.2em;
+  color:rgba(var(--ar),var(--ag),var(--ab),.38);margin-bottom:3px;
+}
+.cfg-input {
+  width:100%;background:transparent;border:none;outline:none;
+  color:var(--label);font-family:var(--mono);font-size:13px;font-weight:700;padding:0;
+}
+.cfg-input::placeholder { color:rgba(var(--ar),var(--ag),var(--ab),.18); }
+
+/* ── Server button ── */
+.server-btn {
+  width:100%;height:44px;
+  font-family:var(--hud);font-size:12px;font-weight:900;letter-spacing:.35em;
+  border-radius:var(--radius);border:1px solid;cursor:pointer;transition:all .2s;
+}
+.server-btn.start {
+  background:var(--green-ghost);border-color:var(--green);color:var(--green);
+  text-shadow:0 0 10px rgba(var(--ar),var(--ag),var(--ab),.5);
+  box-shadow:0 0 16px rgba(var(--ar),var(--ag),var(--ab),.07);
+}
+.server-btn.start:hover:not(:disabled) {
+  background:var(--green-faint);box-shadow:0 0 22px rgba(var(--ar),var(--ag),var(--ab),.18);
+}
+.server-btn.stop {
+  background:rgba(255,59,92,.07);border-color:var(--red);color:var(--red);
+  text-shadow:0 0 10px rgba(255,59,92,.5);
+  animation:pulse-r 1.5s ease-in-out infinite;
+}
+@keyframes pulse-r{0%,100%{box-shadow:0 0 8px rgba(255,59,92,.07)}50%{box-shadow:0 0 20px rgba(255,59,92,.22)}}
+.server-btn:disabled { opacity:.3;cursor:not-allowed; }
+
+/* ── Lease table ── */
+.lease-panel {
+  flex:1;min-height:0;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);display:flex;flex-direction:column;overflow:hidden;
+}
+.lease-header {
+  display:grid;grid-template-columns:108px 130px 90px 1fr 60px 90px;
+  padding:6px 14px;border-bottom:1px solid var(--border);
+  font-family:var(--hud);font-size:8px;font-weight:900;letter-spacing:.2em;
+  color:rgba(var(--ar),var(--ag),var(--ab),.32);
+  background:rgba(var(--bgr),var(--bgg),var(--bgb),.5);
+}
+.lease-list { flex:1;overflow-y:auto; }
+.lease-list::-webkit-scrollbar{width:2px;}
+.lease-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.lease-row {
+  display:grid;grid-template-columns:108px 130px 90px 1fr 60px 90px;
+  padding:7px 14px;border-bottom:1px solid rgba(var(--ar),var(--ag),var(--ab),.05);
+  align-items:center;animation:fadeIn .3s ease;transition:background .15s;
+}
+.lease-row:hover { background:var(--green-ghost); }
+@keyframes fadeIn{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:translateY(0)}}
+.lease-ip     { font-family:var(--hud);font-size:11px;font-weight:700;color:var(--label);letter-spacing:.05em; }
+.lease-mac    { font-size:11px;color:rgba(var(--ar),var(--ag),var(--ab),.45);font-weight:700; }
+.lease-vendor { font-family:var(--hud);font-size:9px;font-weight:700;letter-spacing:.1em;color:var(--green); }
+.lease-hostname { font-size:11px;color:rgba(var(--lr),var(--lg),var(--lb),.55);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.lease-expiry { font-size:10px;color:rgba(var(--ar),var(--ag),var(--ab),.38); }
+.btn-open {
+  background:var(--green-ghost);border:1px solid var(--border);border-radius:var(--radius);
+  color:var(--green);font-family:var(--hud);font-size:7px;font-weight:900;letter-spacing:.1em;
+  padding:3px 6px;cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.btn-open:hover { background:var(--green-faint);border-color:var(--green);box-shadow:0 0 10px rgba(var(--ar),var(--ag),var(--ab),.18); }
+.btn-revoke {
+  background:transparent;border:1px solid rgba(255,59,92,.25);border-radius:var(--radius);
+  color:rgba(255,59,92,.5);font-family:var(--hud);font-size:7px;font-weight:900;letter-spacing:.08em;
+  padding:3px 6px;cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.btn-revoke:hover { color:var(--red);border-color:var(--red);background:rgba(255,59,92,.08); }
+.btn-copy {
+  background:transparent;border:1px solid rgba(var(--ar),var(--ag),var(--ab),.18);border-radius:var(--radius);
+  color:rgba(var(--ar),var(--ag),var(--ab),.4);font-family:var(--hud);font-size:9px;font-weight:900;
+  padding:2px 5px;cursor:pointer;transition:all .15s;user-select:none;
+}
+.btn-copy:hover { color:var(--green);border-color:var(--green);background:var(--green-ghost); }
+.btn-copy.copied { color:var(--green);border-color:var(--green); }
+.empty-state {
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:20px;
+}
+.empty-icon { font-size:28px;opacity:.18; }
+.empty-text { font-family:var(--hud);font-size:9px;font-weight:700;letter-spacing:.2em;color:rgba(var(--ar),var(--ag),var(--ab),.22); }
+
+/* ── Toolbar row (between lease header and log) ── */
+.toolbar-row {
+  display:flex;gap:6px;align-items:center;
+}
+.tool-btn {
+  background:var(--green-ghost);border:1px solid var(--border);border-radius:var(--radius);
+  color:rgba(var(--ar),var(--ag),var(--ab),.5);font-family:var(--hud);font-size:8px;font-weight:900;
+  letter-spacing:.12em;padding:5px 10px;cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.tool-btn:hover { color:var(--green);border-color:var(--green);background:var(--green-faint); }
+.tool-btn:disabled { opacity:.3;cursor:not-allowed; }
+
+/* ── Log ── */
+.log-strip {
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  height:54px;overflow-y:auto;padding:4px 12px;
+  font-size:11px;color:rgba(var(--ar),var(--ag),var(--ab),.38);line-height:1.7;
+  user-select:text;cursor:text;
+}
+.log-strip::-webkit-scrollbar{width:2px;}
+.log-strip::-webkit-scrollbar-thumb{background:var(--border);}
+.log-strip .ok   { color:var(--green); }
+.log-strip .warn { color:var(--amber); }
+.log-strip .err  { color:var(--red); }
+.log-strip .info { color:var(--blue); }
+
+/* ── Toast ── */
+.link-toast {
+  position:fixed;bottom:68px;right:16px;display:none;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:9px 14px;font-family:var(--hud);font-size:9px;font-weight:700;letter-spacing:.15em;
+  color:var(--green);box-shadow:0 0 16px rgba(var(--ar),var(--ag),var(--ab),.12);
+  animation:toastIn .25s ease;z-index:1000;
+}
+@keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Palette dropdown ── */
+.palette-dropdown {
+  position:absolute;top:calc(48px + 4px);right:10px;width:210px;
+  max-height:calc(100vh - 60px);overflow-y:auto;
+  background:rgba(var(--bgr),var(--bgg),var(--bgb),0.99);
+  border:1px solid rgba(var(--ar),var(--ag),var(--ab),.38);
+  border-radius:5px;padding:10px;z-index:500;display:none;
+  box-shadow:0 8px 32px rgba(0,0,0,.7);
+}
+.palette-dropdown.visible { display:block; }
+.palette-title { font-family:var(--hud);font-size:11px;font-weight:900;letter-spacing:1.5px;margin-bottom:8px;color:rgba(var(--ar),var(--ag),var(--ab),.45); }
+.palette-presets { display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:10px; }
+.palette-swatch { aspect-ratio:1;width:100%;min-height:44px;border-radius:var(--radius);cursor:pointer;border:2px solid transparent;transition:all .15s; }
+.palette-swatch:hover { transform:scale(1.1); }
+.palette-swatch.active { border-color:#fff; }
+.palette-swatch-label { font-size:7px;text-align:center;margin-top:3px;font-weight:700;letter-spacing:.5px;opacity:.65;font-family:var(--hud); }
+.palette-divider { border:none;border-top:1px solid rgba(var(--ar),var(--ag),var(--ab),.1);margin:6px 0; }
+.palette-custom-title { font-size:10px;font-weight:700;font-family:var(--hud);color:rgba(var(--ar),var(--ag),var(--ab),.45);letter-spacing:1px;margin-bottom:6px; }
+.palette-row { display:flex;align-items:center;gap:8px;margin-bottom:6px; }
+.palette-row-label { font-size:10px;font-weight:700;font-family:var(--hud);color:rgba(var(--ar),var(--ag),var(--ab),.45);letter-spacing:1px;width:76px;flex-shrink:0; }
+.palette-color-input { flex:1;height:24px;border:1px solid rgba(var(--ar),var(--ag),var(--ab),.28);border-radius:var(--radius);background:transparent;cursor:pointer;padding:2px; }
+.palette-apply-btn {
+  width:100%;background:rgba(var(--ar),var(--ag),var(--ab),.08);
+  border:1px solid rgba(var(--ar),var(--ag),var(--ab),.45);color:var(--green);
+  font-family:var(--hud);font-size:11px;font-weight:900;letter-spacing:2px;
+  padding:7px;border-radius:var(--radius);cursor:pointer;text-align:center;margin-bottom:2px;transition:all .15s;
+}
+.palette-apply-btn:hover { background:rgba(var(--ar),var(--ag),var(--ab),.18); }
+</style>
+</head>
+<body>
+
+<div class="titlebar">
+  <div class="tb-left">
+    <div class="tb-logo">//</div>
+    <div>
+      <div class="tb-title">NET<em>//</em>DHCP</div>
+      <div class="tb-sub">AUTO LEASE · DEVICE DISCOVERY · BROMAN ENTERPRISES</div>
+    </div>
+  </div>
+  <div class="tb-right">
+    <div class="tb-version" id="verLabel">v2.0</div>
+    <div class="win-btn" id="btn-palette" title="Colour theme">▣</div>
+    <div class="win-controls">
+      <button class="wbtn min" id="btnMin"></button>
+      <button class="wbtn cls" id="btnClose"></button>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+
+  <div>
+    <div class="lbl">Network Adapter</div>
+    <div class="adapter-row">
+      <select class="adapter-select" id="adapterSel">
+        <option value="">— scanning adapters —</option>
+      </select>
+      <div class="adapter-status">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusTxt">NO LINK</span>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="lbl">DHCP Configuration</div>
+    <div class="config-grid">
+      <div class="cfg-field" id="fldServerIp">
+        <div class="cfg-label">Server IP (Your NIC)</div>
+        <input class="cfg-input" id="cfgServerIp" value="192.168.1.1" spellcheck="false"/>
+      </div>
+      <div class="cfg-field" id="fldSubnet">
+        <div class="cfg-label">Subnet Mask</div>
+        <input class="cfg-input" id="cfgSubnet" value="255.255.255.0" spellcheck="false"/>
+      </div>
+      <div class="cfg-field" id="fldRangeStart">
+        <div class="cfg-label">Pool Start</div>
+        <input class="cfg-input" id="cfgRangeStart" value="192.168.1.100" spellcheck="false"/>
+      </div>
+      <div class="cfg-field" id="fldRangeEnd">
+        <div class="cfg-label">Pool End</div>
+        <input class="cfg-input" id="cfgRangeEnd" value="192.168.1.200" spellcheck="false"/>
+      </div>
+      <div class="cfg-field" id="fldGateway">
+        <div class="cfg-label">Gateway (optional — defaults to Server IP)</div>
+        <input class="cfg-input" id="cfgGateway" value="" spellcheck="false" placeholder="auto"/>
+      </div>
+      <div class="cfg-field" id="fldDns">
+        <div class="cfg-label">DNS Server (optional — omitted if blank)</div>
+        <input class="cfg-input" id="cfgDns" value="" spellcheck="false" placeholder="none"/>
+      </div>
+      <div class="cfg-field" id="fldLease" style="grid-column:1/-1">
+        <div class="cfg-label">Lease Duration (seconds) — shorter = faster re-acquire after restart</div>
+        <input class="cfg-input" id="cfgLease" value="300" spellcheck="false" style="width:120px"/>
+      </div>
+    </div>
+  </div>
+
+  <button class="server-btn start" id="btnServer">⚡ START DHCP SERVER</button>
+
+  <div style="flex:1;min-height:0;display:flex;flex-direction:column;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <div class="lbl" style="margin-bottom:0;">Active Leases <span id="leaseCount" style="color:var(--green);margin-left:4px;">0</span></div>
+      <div class="toolbar-row">
+        <button id="btnExportCsv" class="tool-btn" disabled title="Copy lease table as CSV">⎘ CSV</button>
+        <button id="btnReleaseAll" class="tool-btn" disabled title="Release all leases">✕ RELEASE ALL</button>
+      </div>
+    </div>
+    <div class="lease-panel">
+      <div class="lease-header">
+        <span>IP ADDRESS</span>
+        <span>MAC ADDRESS</span>
+        <span>VENDOR</span>
+        <span>HOSTNAME</span>
+        <span>TTL</span>
+        <span>ACTIONS</span>
+      </div>
+      <div class="lease-list" id="leaseList">
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon">📡</div>
+          <div class="empty-text">WAITING FOR DEVICES</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:6px;">
+    <div class="log-strip" id="logStrip" style="flex:1;"></div>
+    <button id="btnCopyLog" class="tool-btn" style="height:54px;" title="Copy log to clipboard">⎘ LOG</button>
+  </div>
+
+</div>
+
+<div class="palette-dropdown" id="palette-dropdown">
+  <div class="palette-title">COLOUR THEME</div>
+  <div class="palette-presets" id="palette-presets"></div>
+  <hr class="palette-divider">
+  <div class="palette-custom-title">CUSTOM</div>
+  <div class="palette-apply-btn" onclick="applyCustomPalette()">APPLY CUSTOM</div>
+  <div style="margin-top:8px">
+    <div class="palette-row">
+      <span class="palette-row-label">ACCENT</span>
+      <input class="palette-color-input" type="color" id="custom-accent" value="#ff9f0a">
+    </div>
+    <div class="palette-row">
+      <span class="palette-row-label">LABELS</span>
+      <input class="palette-color-input" type="color" id="custom-label" value="#ffe0a0">
+    </div>
+    <div class="palette-row">
+      <span class="palette-row-label">BACKGROUND</span>
+      <input class="palette-color-input" type="color" id="custom-bg" value="#060810">
+    </div>
+  </div>
+</div>
+
+<div class="link-toast" id="toast"></div>
+
+<script>
+// ── THEME ENGINE ──────────────────────────────────────────────────────────────
+const PALETTES = [
+  { id:'amber',  name:'DEFAULT',  accent:'#ff9f0a', bg:'#060810', label:'#ffe0a0', swatch:'#ff9f0a' },
+  { id:'green',  name:'ONLINE',   accent:'#00ff90', bg:'#090d12', label:'#a0dcff', swatch:'#00ff90' },
+  { id:'cyan',   name:'COLDTECH', accent:'#00ddff', bg:'#050d12', label:'#c0f0ff', swatch:'#00ddff' },
+  { id:'red',    name:'DANGER',   accent:'#ff3355', bg:'#120909', label:'#ffb0b0', swatch:'#ff3355' },
+  { id:'purple', name:'SYNTH',    accent:'#cc44ff', bg:'#0d0712', label:'#e0b0ff', swatch:'#cc44ff' },
+  { id:'gray',   name:'STEALTH',  accent:'#aabbcc', bg:'#0a0a0c', label:'#d0d8e0', swatch:'#aabbcc' },
+];
+let activePaletteId = 'amber';
+
+function hexToRgb(hex) {
+  return { r:parseInt(hex.slice(1,3),16), g:parseInt(hex.slice(3,5),16), b:parseInt(hex.slice(5,7),16) };
+}
+
+function applyPalette(accentHex, bgHex, paletteId, labelHex) {
+  const a = hexToRgb(accentHex), bg = hexToRgb(bgHex), l = hexToRgb(labelHex || accentHex);
+  const root = document.documentElement;
+  root.style.setProperty('--ar', a.r); root.style.setProperty('--ag', a.g); root.style.setProperty('--ab', a.b);
+  root.style.setProperty('--bgr', bg.r); root.style.setProperty('--bgg', bg.g); root.style.setProperty('--bgb', bg.b);
+  root.style.setProperty('--lr', l.r); root.style.setProperty('--lg', l.g); root.style.setProperty('--lb', l.b);
+  root.style.setProperty('--surface', `rgba(${Math.min(255,bg.r+10)},${Math.min(255,bg.g+14)},${Math.min(255,bg.b+14)},0.95)`);
+  activePaletteId = paletteId || 'custom';
+  renderPaletteSwatches();
+  try { localStorage.setItem('netdhcp-theme', JSON.stringify({ accent:accentHex, bg:bgHex, label:labelHex||accentHex, id:activePaletteId })); } catch{}
+}
+
+function renderPaletteSwatches() {
+  const c = document.getElementById('palette-presets');
+  c.innerHTML = '';
+  PALETTES.forEach(p => {
+    const wrap = document.createElement('div');
+    const sw = document.createElement('div');
+    sw.className = 'palette-swatch' + (activePaletteId === p.id ? ' active' : '');
+    sw.style.background = p.swatch;
+    sw.style.boxShadow  = activePaletteId === p.id ? `0 0 8px ${p.swatch}80` : 'none';
+    sw.onclick = () => {
+      applyPalette(p.accent, p.bg, p.id, p.label);
+      document.getElementById('custom-accent').value = p.accent;
+      document.getElementById('custom-bg').value     = p.bg;
+      document.getElementById('custom-label').value  = p.label;
+    };
+    const lbl = document.createElement('div');
+    lbl.className = 'palette-swatch-label';
+    lbl.style.color = p.swatch;
+    lbl.textContent = p.name;
+    wrap.appendChild(sw); wrap.appendChild(lbl); c.appendChild(wrap);
+  });
+}
+
+function applyCustomPalette() {
+  applyPalette(
+    document.getElementById('custom-accent').value,
+    document.getElementById('custom-bg').value,
+    'custom',
+    document.getElementById('custom-label').value
+  );
+}
+
+function togglePalette(e) {
+  e.stopPropagation();
+  const dd = document.getElementById('palette-dropdown');
+  const btn = document.getElementById('btn-palette');
+  const vis = dd.classList.contains('visible');
+  dd.classList.toggle('visible', !vis);
+  btn.classList.toggle('active', !vis);
+}
+
+document.addEventListener('click', e => {
+  const dd = document.getElementById('palette-dropdown');
+  if (!dd.contains(e.target) && e.target.id !== 'btn-palette') {
+    dd.classList.remove('visible');
+    document.getElementById('btn-palette').classList.remove('active');
+  }
+});
+
+function loadSavedTheme() {
+  try {
+    const saved = localStorage.getItem('netdhcp-theme');
+    if (saved) {
+      const { accent, bg, label, id } = JSON.parse(saved);
+      activePaletteId = id || 'amber';
+      applyPalette(accent, bg, activePaletteId, label);
+      document.getElementById('custom-accent').value = accent;
+      document.getElementById('custom-bg').value     = bg;
+      document.getElementById('custom-label').value  = label || '#ffe0a0';
+      return;
+    }
+  } catch {}
+  applyPalette('#ff9f0a', '#060810', 'amber', '#ffe0a0');
+}
+
+// ── APP LOGIC ─────────────────────────────────────────────────────────────────
+let serverRunning = false;
+let leases = [];
+let expiryTickTimer = null;
+
+document.getElementById('btnMin').onclick      = () => window.api.minimize();
+document.getElementById('btnClose').onclick    = () => window.api.close();
+document.getElementById('btn-palette').onclick = e => togglePalette(e);
+
+const adapterSel    = document.getElementById('adapterSel');
+const statusDot     = document.getElementById('statusDot');
+const statusTxt     = document.getElementById('statusTxt');
+const btnServer     = document.getElementById('btnServer');
+const btnReleaseAll = document.getElementById('btnReleaseAll');
+const btnExportCsv  = document.getElementById('btnExportCsv');
+const btnCopyLog    = document.getElementById('btnCopyLog');
+const leaseList     = document.getElementById('leaseList');
+const leaseCount    = document.getElementById('leaseCount');
+const logStrip      = document.getElementById('logStrip');
+
+btnReleaseAll.onclick = async () => {
+  if (!serverRunning || leases.length === 0) return;
+  await window.api.releaseAll();
+};
+
+btnExportCsv.onclick = async () => {
+  const csv = await window.api.exportLeasesCsv();
+  if (!csv) { showToast('No leases to export'); return; }
+  await navigator.clipboard.writeText(csv);
+  showToast('⎘ Lease CSV copied to clipboard');
+};
+
+btnCopyLog.onclick = async () => {
+  const text = await window.api.exportLog();
+  if (!text) { showToast('Log is empty'); return; }
+  await navigator.clipboard.writeText(text);
+  showToast('⎘ Log copied to clipboard');
+};
+
+// ── Adapter polling ───────────────────────────────────────────────────────────
+window.api.onAdapterState(data => {
+  if (data.event === 'poll' && data.adapters) {
+    const cur = adapterSel.value;
+    adapterSel.innerHTML = '<option value="">— select adapter —</option>';
+    for (const a of data.adapters) {
+      const opt = document.createElement('option');
+      opt.value = a.name;
+      opt.textContent = a.name + (a.ip ? '  [' + a.ip + ']' : '  [no link]');
+      if (a.name === cur) opt.selected = true;
+      adapterSel.appendChild(opt);
+    }
+    updateStatus(data.adapters);
+  }
+  if (data.event === 'link-up')   { showToast('⚡ LINK UP — ' + data.name); log('Link UP: ' + data.name, 'warn'); }
+  if (data.event === 'link-down') { log('Link DOWN: ' + data.name, 'err'); }
+});
+
+function updateStatus(adapters) {
+  const a = adapters ? adapters.find(x => x.name === adapterSel.value) : null;
+  if (!a) { statusDot.className = 'status-dot'; statusTxt.textContent = 'NO LINK'; return; }
+  statusDot.className = a.connected ? 'status-dot active' : 'status-dot';
+  statusTxt.textContent = a.connected ? 'LINK UP' : 'NO LINK';
+}
+
+// Auto-populate config when adapter is selected
+adapterSel.onchange = async () => {
+  window.api.getAdapters().then(updateStatus);
+  if (!adapterSel.value || serverRunning) return;
+  const cfg = await window.api.getAdapterConfig(adapterSel.value);
+  if (!cfg) return;
+  document.getElementById('cfgServerIp').value   = cfg.serverIp;
+  document.getElementById('cfgSubnet').value     = cfg.subnet;
+  document.getElementById('cfgRangeStart').value = cfg.rangeStart;
+  document.getElementById('cfgRangeEnd').value   = cfg.rangeEnd;
+  document.getElementById('cfgGateway').value    = cfg.gateway || '';
+  document.getElementById('cfgDns').value        = cfg.dns || '';
+  clearFieldErrors();
+  log('Config auto-populated from adapter', 'info');
+};
+
+// ── Start / Stop ──────────────────────────────────────────────────────────────
+btnServer.onclick = async () => {
+  if (serverRunning) {
+    await window.api.stopDhcp();
+    serverRunning = false;
+    btnServer.className   = 'server-btn start';
+    btnServer.textContent = '⚡ START DHCP SERVER';
+    stopExpiryTick();
+    log('Server stopped', 'warn');
+    return;
+  }
+
+  if (!adapterSel.value) {
+    log('Select a network adapter before starting', 'err');
+    return;
+  }
+
+  const adapterIp  = document.getElementById('cfgServerIp').value.trim();
+  const subnet     = document.getElementById('cfgSubnet').value.trim();
+  const rangeStart = document.getElementById('cfgRangeStart').value.trim();
+  const rangeEnd   = document.getElementById('cfgRangeEnd').value.trim();
+  const gateway    = document.getElementById('cfgGateway').value.trim();
+  const dns        = document.getElementById('cfgDns').value.trim();
+  const leaseSecs  = Math.max(30, parseInt(document.getElementById('cfgLease').value.trim()) || 300);
+
+  clearFieldErrors();
+
+  const v = await window.api.validateConfig({ adapterIp, subnet, rangeStart, rangeEnd, gateway, dns });
+  if (!v.ok) {
+    log('Config error: ' + v.msg, 'err');
+    highlightFieldError(v.msg);
+    return;
+  }
+
+  log('Starting DHCP server...', 'info');
+  const r = await window.api.startDhcp({ adapterName: adapterSel.value, adapterIp, subnet, rangeStart, rangeEnd, gateway, dns, lease: leaseSecs });
+  if (r.ok) {
+    serverRunning = true;
+    btnServer.className   = 'server-btn stop';
+    btnServer.textContent = '■ STOP DHCP SERVER';
+    startExpiryTick();
+  } else {
+    log('Failed: ' + r.msg, 'err');
+  }
+};
+
+function highlightFieldError(msg) {
+  const m = msg.toLowerCase();
+  if (m.includes('server ip'))  document.getElementById('fldServerIp').classList.add('error');
+  if (m.includes('subnet'))     document.getElementById('fldSubnet').classList.add('error');
+  if (m.includes('pool start')) document.getElementById('fldRangeStart').classList.add('error');
+  if (m.includes('pool end'))   document.getElementById('fldRangeEnd').classList.add('error');
+  if (m.includes('gateway'))    document.getElementById('fldGateway').classList.add('error');
+  if (m.includes('dns'))        document.getElementById('fldDns').classList.add('error');
+  if (m.includes('pool') && m.includes('less')) {
+    document.getElementById('fldRangeStart').classList.add('error');
+    document.getElementById('fldRangeEnd').classList.add('error');
+  }
+}
+
+function clearFieldErrors() {
+  ['fldServerIp','fldSubnet','fldRangeStart','fldRangeEnd','fldGateway','fldDns','fldLease'].forEach(id =>
+    document.getElementById(id).classList.remove('error')
+  );
+}
+
+// ── Lease events from main ────────────────────────────────────────────────────
+window.api.onStatus(data => {
+  if (data.active) log('DHCP active — ' + data.adapterIp + '  pool ' + data.rangeStart + '–' + data.rangeEnd, 'ok');
+  else             { leases = []; renderLeases(); }
+});
+
+window.api.onLease(data => {
+  const idx = leases.findIndex(l => l.mac === data.mac);
+  if (idx >= 0) leases[idx] = data; else leases.push(data);
+  renderLeases();
+  const label = data.hostname ? data.hostname : data.vendor;
+  log('Lease → ' + data.ip + '  ' + data.mac + '  ' + data.vendor + (data.hostname ? '  ' + data.hostname : ''), 'ok');
+  showToast('📶 ' + data.ip + ' — ' + label);
+});
+
+window.api.onLeasesUpdated(list => {
+  leases = list;
+  renderLeases();
+});
+
+// ── Lease rendering ───────────────────────────────────────────────────────────
+function fmtExpiry(expires) {
+  if (!expires) return '—';
+  const secs = Math.max(0, Math.round((expires - Date.now()) / 1000));
+  if (secs <= 0) return 'EXP';
+  const m = Math.floor(secs / 60), s = secs % 60;
+  return m > 0 ? `${m}m ${s}s` : `${s}s`;
+}
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function renderLeases() {
+  leaseCount.textContent = leases.length;
+  const hasLeases = leases.length > 0;
+  btnReleaseAll.disabled = !serverRunning || !hasLeases;
+  btnExportCsv.disabled  = !hasLeases;
+  if (!leases.length) {
+    leaseList.innerHTML = '<div class="empty-state"><div class="empty-icon">📡</div><div class="empty-text">WAITING FOR DEVICES</div></div>';
+    return;
+  }
+  leaseList.innerHTML = '';
+  for (const l of leases) {
+    const row = document.createElement('div');
+    row.className = 'lease-row';
+    row.dataset.mac = l.mac;
+    const hostname = esc(l.hostname || '—');
+    const ip       = esc(l.ip);
+    const mac      = esc(l.mac);
+    const vendor   = esc(l.vendor || '—');
+    row.innerHTML =
+      '<div class="lease-ip">' +
+        '<span class="copy-val">' + ip + '</span> ' +
+        '<button class="btn-copy" data-copy="' + ip + '">⎘</button>' +
+      '</div>' +
+      '<div class="lease-mac">' +
+        '<span class="copy-val">' + mac + '</span> ' +
+        '<button class="btn-copy" data-copy="' + mac + '">⎘</button>' +
+      '</div>' +
+      '<div class="lease-vendor">' + vendor + '</div>' +
+      '<div class="lease-hostname">' + hostname + '</div>' +
+      '<div class="lease-expiry" data-expires="' + (l.expires || 0) + '">' + fmtExpiry(l.expires) + '</div>' +
+      '<div style="display:flex;gap:4px;">' +
+        '<button class="btn-open" data-ip="' + ip + '">OPEN</button>' +
+        '<button class="btn-revoke" data-mac="' + mac + '">✕</button>' +
+      '</div>';
+    leaseList.appendChild(row);
+  }
+  leaseList.querySelectorAll('.btn-open').forEach(b => {
+    b.onclick = () => window.api.openBrowser(b.dataset.ip);
+  });
+  leaseList.querySelectorAll('.btn-revoke').forEach(b => {
+    b.onclick = async () => {
+      const r = await window.api.revokeLease(b.dataset.mac);
+      if (r.ok) log('Revoked ' + r.ip, 'warn');
+    };
+  });
+  leaseList.querySelectorAll('.btn-copy').forEach(b => {
+    b.onclick = () => {
+      navigator.clipboard.writeText(b.dataset.copy).then(() => {
+        b.textContent = '✓';
+        b.classList.add('copied');
+        setTimeout(() => { b.textContent = '⎘'; b.classList.remove('copied'); }, 1500);
+      });
+    };
+  });
+}
+
+// Live expiry countdown tick
+function startExpiryTick() {
+  stopExpiryTick();
+  expiryTickTimer = setInterval(() => {
+    document.querySelectorAll('.lease-expiry[data-expires]').forEach(el => {
+      el.textContent = fmtExpiry(parseInt(el.dataset.expires));
+    });
+  }, 1000);
+}
+
+function stopExpiryTick() {
+  if (expiryTickTimer) { clearInterval(expiryTickTimer); expiryTickTimer = null; }
+}
+
+// ── Log ───────────────────────────────────────────────────────────────────────
+window.api.onLog(data => log(data.msg));
+
+function log(msg, cls='') {
+  const d = document.createElement('div');
+  if (cls) d.className = cls;
+  d.textContent = '› ' + msg;
+  logStrip.appendChild(d);
+  while (logStrip.children.length > 150) logStrip.removeChild(logStrip.firstChild);
+  logStrip.scrollTop = logStrip.scrollHeight;
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.style.display = 'none'; }, 4000);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  loadSavedTheme();
+  renderPaletteSwatches();
+  renderLeases();
+
+  // Inject version from package.json
+  try {
+    const ver = await window.api.getVersion();
+    document.getElementById('verLabel').textContent = 'v' + ver;
+  } catch {}
+
+  // Restore saved config
+  try {
+    const saved = await window.api.loadConfig();
+    if (saved) {
+      if (saved.adapterIp)  document.getElementById('cfgServerIp').value   = saved.adapterIp;
+      if (saved.subnet)     document.getElementById('cfgSubnet').value     = saved.subnet;
+      if (saved.rangeStart) document.getElementById('cfgRangeStart').value = saved.rangeStart;
+      if (saved.rangeEnd)   document.getElementById('cfgRangeEnd').value   = saved.rangeEnd;
+      if (saved.gateway)    document.getElementById('cfgGateway').value    = saved.gateway;
+      if (saved.dns)        document.getElementById('cfgDns').value        = saved.dns;
+      if (saved.lease)      document.getElementById('cfgLease').value      = saved.lease;
+      if (saved.adapter) {
+        // Try to pre-select the adapter once polling fills the dropdown
+        const trySelect = setInterval(() => {
+          const opts = Array.from(adapterSel.options);
+          const match = opts.find(o => o.value === saved.adapter);
+          if (match) { adapterSel.value = saved.adapter; clearInterval(trySelect); }
+        }, 500);
+        setTimeout(() => clearInterval(trySelect), 10000);
+      }
+      log('Config restored from last session', 'info');
+    }
+  } catch {}
+});
+</script>
+</body>
+</html>
