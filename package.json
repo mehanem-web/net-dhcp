@@ -1,7 +1,7 @@
 {
   "name": "net-dhcp",
-  "version": "2.0.0",
-  "description": "NET//DHCP — Auto DHCP lease & device discovery — Broman Enterprises",
+  "version": "3.0.4",
+  "description": "NET//DHCP \u2014 Listen-first DHCP with targeted serve & device discovery \u2014 Broman Enterprises",
   "main": "main.js",
   "author": "Broman Enterprises",
   "scripts": {
@@ -26,6 +26,7 @@
       "installer.nsh",
       "package.json",
       "assets/fonts/**/*",
+      "assets/oui.json",
       "assets/icon.ico",
       "assets/icon.png"
     ],

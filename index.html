@@ -111,7 +111,7 @@ body::after {
 .wbtn.cls { background:#ff3b5c; }
 
 /* ── Layout ── */
-.app { display:flex;flex-direction:column;gap:10px;padding:14px 16px;height:calc(100vh - 48px);overflow:hidden; }
+.app { display:flex;flex-direction:column;gap:9px;padding:12px 16px;height:calc(100vh - 48px);overflow:hidden; }
 
 /* ── Labels ── */
 .lbl {
@@ -120,8 +120,9 @@ body::after {
   display:flex;align-items:center;gap:8px;
 }
 .lbl::after { content:'';flex:1;height:1px;background:var(--border); }
+.lbl .lbl-extra { display:flex;gap:6px;align-items:center;letter-spacing:normal; }
 
-/* ── Adapter row ── */
+/* ── Adapter / mode row ── */
 .adapter-row { display:flex;gap:8px;align-items:stretch; }
 .adapter-select {
   flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
@@ -144,8 +145,23 @@ body::after {
 .status-dot.blink  { background:var(--amber);box-shadow:0 0 6px rgba(255,204,68,.7);animation:blink .7s ease-in-out infinite; }
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
 
+/* Mode badge */
+.mode-badge {
+  display:flex;align-items:center;gap:9px;padding:0 16px;height:38px;min-width:230px;justify-content:center;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  font-family:var(--hud);font-size:10px;font-weight:900;letter-spacing:.22em;white-space:nowrap;
+  transition:all .3s;
+}
+.mode-badge .mb-dot { width:8px;height:8px;border-radius:50%;flex-shrink:0; }
+.mode-badge.listen   { border-color:rgba(255,204,68,.5);color:var(--amber); }
+.mode-badge.listen .mb-dot { background:var(--amber);box-shadow:0 0 8px rgba(255,204,68,.8);animation:blink 1.2s ease-in-out infinite; }
+.mode-badge.serving  { border-color:var(--green);color:var(--green);box-shadow:0 0 14px rgba(var(--ar),var(--ag),var(--ab),.12); }
+.mode-badge.serving .mb-dot { background:var(--green);box-shadow:0 0 8px rgba(var(--ar),var(--ag),var(--ab),.9); }
+.mode-badge.off      { color:rgba(var(--ar),var(--ag),var(--ab),.25); }
+.mode-badge.off .mb-dot { background:rgba(var(--ar),var(--ag),var(--ab),.15); }
+
 /* ── Config grid ── */
-.config-grid { display:grid;grid-template-columns:1fr 1fr;gap:7px; }
+.config-grid { display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px; }
 .cfg-field {
   background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
   padding:7px 12px;transition:border-color .2s;
@@ -161,10 +177,24 @@ body::after {
   color:var(--label);font-family:var(--mono);font-size:13px;font-weight:700;padding:0;
 }
 .cfg-input::placeholder { color:rgba(var(--ar),var(--ag),var(--ab),.18); }
+select.cfg-input { cursor:pointer; }
+select.cfg-input option { background:#0b0e18; }
 
-/* ── Server button ── */
+/* Advanced drawer */
+.adv-toggle {
+  display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:7px;
+  font-family:var(--hud);font-size:8px;font-weight:900;letter-spacing:.25em;
+  color:rgba(var(--ar),var(--ag),var(--ab),.32);transition:color .15s;
+}
+.adv-toggle:hover { color:var(--green-dim); }
+.adv-toggle::after { content:'';flex:1;height:1px;background:rgba(var(--ar),var(--ag),var(--ab),.12); }
+.adv-drawer { display:none;margin-top:7px; }
+.adv-drawer.open { display:block; }
+
+/* ── Buttons row ── */
+.btn-row { display:flex;gap:8px; }
 .server-btn {
-  width:100%;height:44px;
+  flex:1;height:44px;
   font-family:var(--hud);font-size:12px;font-weight:900;letter-spacing:.35em;
   border-radius:var(--radius);border:1px solid;cursor:pointer;transition:all .2s;
 }
@@ -183,40 +213,72 @@ body::after {
 }
 @keyframes pulse-r{0%,100%{box-shadow:0 0 8px rgba(255,59,92,.07)}50%{box-shadow:0 0 20px rgba(255,59,92,.22)}}
 .server-btn:disabled { opacity:.3;cursor:not-allowed; }
+.side-btn {
+  width:150px;height:44px;
+  font-family:var(--hud);font-size:10px;font-weight:900;letter-spacing:.16em;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  color:var(--green-dim);cursor:pointer;transition:all .2s;
+}
+.side-btn:hover:not(:disabled) { border-color:var(--green);color:var(--green);background:var(--green-ghost); }
+.side-btn:disabled { opacity:.3;cursor:not-allowed; }
 
-/* ── Lease table ── */
-.lease-panel {
+/* ── Device table ── */
+.dev-panel {
   flex:1;min-height:0;background:var(--surface);border:1px solid var(--border);
   border-radius:var(--radius);display:flex;flex-direction:column;overflow:hidden;
 }
-.lease-header {
-  display:grid;grid-template-columns:108px 130px 90px 1fr 60px 90px;
-  padding:6px 14px;border-bottom:1px solid var(--border);
+.dev-header {
+  display:grid;grid-template-columns:96px 168px 152px 118px 1fr 112px 158px;
+  padding:6px 14px;border-bottom:1px solid var(--border);gap:6px;
   font-family:var(--hud);font-size:8px;font-weight:900;letter-spacing:.2em;
   color:rgba(var(--ar),var(--ag),var(--ab),.32);
   background:rgba(var(--bgr),var(--bgg),var(--bgb),.5);
 }
-.lease-list { flex:1;overflow-y:auto; }
-.lease-list::-webkit-scrollbar{width:2px;}
-.lease-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
-.lease-row {
-  display:grid;grid-template-columns:108px 130px 90px 1fr 60px 90px;
-  padding:7px 14px;border-bottom:1px solid rgba(var(--ar),var(--ag),var(--ab),.05);
+.dev-list { flex:1;overflow-y:auto; }
+.dev-list::-webkit-scrollbar{width:2px;}
+.dev-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.dev-row {
+  display:grid;grid-template-columns:96px 168px 152px 118px 1fr 112px 158px;
+  padding:7px 14px;border-bottom:1px solid rgba(var(--ar),var(--ag),var(--ab),.05);gap:6px;
   align-items:center;animation:fadeIn .3s ease;transition:background .15s;
 }
-.lease-row:hover { background:var(--green-ghost); }
+.dev-row:hover { background:var(--green-ghost); }
+.dev-row.declined { background:rgba(255,59,92,.05); }
+.dev-row.quiet { opacity:.45; }
 @keyframes fadeIn{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:translateY(0)}}
-.lease-ip     { font-family:var(--hud);font-size:11px;font-weight:700;color:var(--label);letter-spacing:.05em; }
-.lease-mac    { font-size:11px;color:rgba(var(--ar),var(--ag),var(--ab),.45);font-weight:700; }
-.lease-vendor { font-family:var(--hud);font-size:9px;font-weight:700;letter-spacing:.1em;color:var(--green); }
-.lease-hostname { font-size:11px;color:rgba(var(--lr),var(--lg),var(--lb),.55);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-.lease-expiry { font-size:10px;color:rgba(var(--ar),var(--ag),var(--ab),.38); }
+
+.pill {
+  font-family:var(--hud);font-size:7px;font-weight:900;letter-spacing:.14em;
+  padding:3px 0;text-align:center;border-radius:9px;border:1px solid;white-space:nowrap;
+}
+.pill.asking   { color:var(--amber);border-color:rgba(255,204,68,.45);background:rgba(255,204,68,.06);animation:blink 1.4s ease-in-out infinite; }
+.pill.offered  { color:var(--blue);border-color:rgba(0,200,255,.4);background:rgba(0,200,255,.05); }
+.pill.leased   { color:var(--green);border-color:rgba(var(--ar),var(--ag),var(--ab),.5);background:var(--green-ghost); }
+.pill.declined { color:var(--red);border-color:rgba(255,59,92,.5);background:rgba(255,59,92,.07);animation:none; }
+.pill.quiet    { color:rgba(var(--ar),var(--ag),var(--ab),.3);border-color:rgba(var(--ar),var(--ag),var(--ab),.15);background:transparent; }
+
+.dev-ip     { font-family:var(--hud);font-size:11px;font-weight:700;color:var(--label);letter-spacing:.05em;display:flex;align-items:center;gap:4px;min-width:0; }
+.dev-ip .would { color:rgba(255,204,68,.55);font-style:italic;font-size:10px; }
+.dev-ip .resv-star { color:var(--amber);font-size:10px;cursor:help; }
+.dev-mac    { font-size:11px;color:rgba(var(--ar),var(--ag),var(--ab),.45);font-weight:700;display:flex;align-items:center;gap:4px; }
+.dev-vendor { font-family:var(--hud);font-size:9px;font-weight:700;letter-spacing:.1em;color:var(--green);overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.dev-hostname { font-size:11px;color:rgba(var(--lr),var(--lg),var(--lb),.55);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.dev-activity { font-size:10px;color:rgba(var(--ar),var(--ag),var(--ab),.38);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.dev-actions { display:flex;gap:4px;justify-content:flex-end;flex-wrap:nowrap; }
+
 .btn-open {
   background:var(--green-ghost);border:1px solid var(--border);border-radius:var(--radius);
   color:var(--green);font-family:var(--hud);font-size:7px;font-weight:900;letter-spacing:.1em;
   padding:3px 6px;cursor:pointer;transition:all .15s;white-space:nowrap;
 }
 .btn-open:hover { background:var(--green-faint);border-color:var(--green);box-shadow:0 0 10px rgba(var(--ar),var(--ag),var(--ab),.18); }
+.btn-serve {
+  background:rgba(255,204,68,.07);border:1px solid rgba(255,204,68,.45);border-radius:var(--radius);
+  color:var(--amber);font-family:var(--hud);font-size:7px;font-weight:900;letter-spacing:.1em;
+  padding:3px 7px;cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.btn-serve:hover { background:rgba(255,204,68,.16);box-shadow:0 0 10px rgba(255,204,68,.25); }
+.btn-serve.targeted { background:var(--green-ghost);border-color:var(--green);color:var(--green); }
 .btn-revoke {
   background:transparent;border:1px solid rgba(255,59,92,.25);border-radius:var(--radius);
   color:rgba(255,59,92,.5);font-family:var(--hud);font-size:7px;font-weight:900;letter-spacing:.08em;
@@ -230,16 +292,27 @@ body::after {
 }
 .btn-copy:hover { color:var(--green);border-color:var(--green);background:var(--green-ghost); }
 .btn-copy.copied { color:var(--green);border-color:var(--green); }
+.btn-pin {
+  background:transparent;border:1px solid rgba(255,204,68,.25);border-radius:var(--radius);
+  color:rgba(255,204,68,.5);font-family:var(--hud);font-size:8px;font-weight:900;
+  padding:2px 5px;cursor:pointer;transition:all .15s;
+}
+.btn-pin:hover { color:var(--amber);border-color:var(--amber);background:rgba(255,204,68,.08); }
+.btn-pin.pinned { color:var(--amber);border-color:var(--amber); }
+.resv-input {
+  width:118px;background:rgba(var(--bgr),var(--bgg),var(--bgb),.8);border:1px solid var(--amber);
+  border-radius:var(--radius);color:var(--label);font-family:var(--mono);font-size:11px;
+  font-weight:700;padding:2px 6px;outline:none;
+}
+
 .empty-state {
   flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:20px;
 }
 .empty-icon { font-size:28px;opacity:.18; }
 .empty-text { font-family:var(--hud);font-size:9px;font-weight:700;letter-spacing:.2em;color:rgba(var(--ar),var(--ag),var(--ab),.22); }
 
-/* ── Toolbar row (between lease header and log) ── */
-.toolbar-row {
-  display:flex;gap:6px;align-items:center;
-}
+/* ── Toolbar ── */
+.toolbar-row { display:flex;gap:6px;align-items:center; }
 .tool-btn {
   background:var(--green-ghost);border:1px solid var(--border);border-radius:var(--radius);
   color:rgba(var(--ar),var(--ag),var(--ab),.5);font-family:var(--hud);font-size:8px;font-weight:900;
@@ -268,9 +341,57 @@ body::after {
   background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
   padding:9px 14px;font-family:var(--hud);font-size:9px;font-weight:700;letter-spacing:.15em;
   color:var(--green);box-shadow:0 0 16px rgba(var(--ar),var(--ag),var(--ab),.12);
-  animation:toastIn .25s ease;z-index:1000;
+  animation:toastIn .25s ease;z-index:1000;max-width:480px;
 }
+.link-toast.warn { color:var(--amber);border-color:rgba(255,204,68,.5);box-shadow:0 0 16px rgba(255,204,68,.15); }
+.link-toast.err  { color:var(--red);border-color:rgba(255,59,92,.5);box-shadow:0 0 16px rgba(255,59,92,.15); }
 @keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Modal ── */
+.modal-overlay {
+  position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:2000;
+  display:none;align-items:center;justify-content:center;
+}
+.modal-overlay.visible { display:flex; }
+.modal {
+  width:480px;max-width:90vw;max-height:80vh;overflow-y:auto;
+  background:rgba(var(--bgr),var(--bgg),var(--bgb),.99);
+  border:1px solid var(--border-bright);border-radius:5px;
+  padding:18px;box-shadow:0 8px 40px rgba(0,0,0,.8);
+}
+.modal::-webkit-scrollbar{width:2px;}
+.modal::-webkit-scrollbar-thumb{background:var(--border);}
+.modal-title {
+  font-family:var(--hud);font-size:11px;font-weight:900;letter-spacing:.25em;
+  color:var(--green);margin-bottom:12px;text-transform:uppercase;
+}
+.modal-body { font-size:12px;line-height:1.7;color:var(--text);margin-bottom:16px;user-select:text; }
+.modal-body .hl { color:var(--amber);font-weight:700; }
+.modal-input {
+  width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  color:var(--label);font-family:var(--mono);font-size:13px;font-weight:700;
+  padding:8px 12px;outline:none;margin-bottom:16px;
+}
+.modal-input:focus { border-color:var(--green); }
+.modal-btns { display:flex;gap:8px;justify-content:flex-end; }
+.modal-btn {
+  font-family:var(--hud);font-size:9px;font-weight:900;letter-spacing:.15em;
+  padding:8px 16px;border-radius:var(--radius);border:1px solid;cursor:pointer;transition:all .15s;
+}
+.modal-btn.primary { background:var(--green-ghost);border-color:var(--green);color:var(--green); }
+.modal-btn.primary:hover { background:var(--green-faint); }
+.modal-btn.danger { background:rgba(255,59,92,.07);border-color:var(--red);color:var(--red); }
+.modal-btn.danger:hover { background:rgba(255,59,92,.15); }
+.modal-btn.ghost { background:transparent;border-color:var(--border);color:rgba(var(--ar),var(--ag),var(--ab),.45); }
+.modal-btn.ghost:hover { border-color:var(--green);color:var(--green); }
+
+/* Self-test rows */
+.st-row { display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid rgba(var(--ar),var(--ag),var(--ab),.07); }
+.st-dot { width:9px;height:9px;border-radius:50%;margin-top:3px;flex-shrink:0; }
+.st-dot.ok   { background:var(--green);box-shadow:0 0 7px rgba(var(--ar),var(--ag),var(--ab),.7); }
+.st-dot.fail { background:var(--red);box-shadow:0 0 7px rgba(255,59,92,.7); }
+.st-label { font-family:var(--hud);font-size:9px;font-weight:900;letter-spacing:.12em;color:var(--label);width:150px;flex-shrink:0;padding-top:1px; }
+.st-detail { font-size:11px;color:rgba(var(--ar),var(--ag),var(--ab),.55);line-height:1.5;user-select:text; }
 
 /* ── Palette dropdown ── */
 .palette-dropdown {
@@ -309,11 +430,11 @@ body::after {
     <div class="tb-logo">//</div>
     <div>
       <div class="tb-title">NET<em>//</em>DHCP</div>
-      <div class="tb-sub">AUTO LEASE · DEVICE DISCOVERY · BROMAN ENTERPRISES</div>
+      <div class="tb-sub">PASSIVE DISCOVERY · TARGETED DHCP · BROMAN ENTERPRISES</div>
     </div>
   </div>
   <div class="tb-right">
-    <div class="tb-version" id="verLabel">v2.0</div>
+    <div class="tb-version" id="verLabel">v3.0.0</div>
     <div class="win-btn" id="btn-palette" title="Colour theme">▣</div>
     <div class="win-controls">
       <button class="wbtn min" id="btnMin"></button>
@@ -327,73 +448,121 @@ body::after {
   <div>
     <div class="lbl">Network Adapter</div>
     <div class="adapter-row">
-      <select class="adapter-select" id="adapterSel">
+      <select class="adapter-select" id="adapterSel" title="Which network card to serve on">
         <option value="">— scanning adapters —</option>
       </select>
       <div class="adapter-status">
         <div class="status-dot" id="statusDot"></div>
         <span id="statusTxt">NO LINK</span>
       </div>
+      <div class="mode-badge off" id="modeBadge" title="What the engine is doing right now">
+        <div class="mb-dot"></div><span id="modeBadgeTxt">OFFLINE</span>
+      </div>
     </div>
   </div>
 
   <div>
-    <div class="lbl">DHCP Configuration</div>
+    <div class="lbl">DHCP Settings
+      <span class="lbl-extra">
+        <select class="cfg-input" id="profileSel" style="width:150px;font-size:11px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:3px 8px;" title="Saved setting profiles">
+          <option value="">— profiles —</option>
+        </select>
+        <button class="tool-btn" id="btnProfileSave" title="Save current settings as a named profile">⊕ SAVE</button>
+        <button class="tool-btn" id="btnProfileDelete" title="Delete the selected profile" disabled>✕</button>
+      </span>
+    </div>
     <div class="config-grid">
       <div class="cfg-field" id="fldServerIp">
-        <div class="cfg-label">Server IP (Your NIC)</div>
+        <div class="cfg-label" title="The address devices will talk to — your network adapter's IP">SERVER IP (THIS PC)</div>
         <input class="cfg-input" id="cfgServerIp" value="192.168.1.1" spellcheck="false"/>
       </div>
       <div class="cfg-field" id="fldSubnet">
-        <div class="cfg-label">Subnet Mask</div>
+        <div class="cfg-label" title="Defines the size of the network — 255.255.255.0 is right for almost every bench job">SUBNET MASK</div>
         <input class="cfg-input" id="cfgSubnet" value="255.255.255.0" spellcheck="false"/>
       </div>
+      <div class="cfg-field" id="fldLease">
+        <div class="cfg-label" title="How long an address is valid — shorter means devices re-ask sooner after a restart">LEASE (SECONDS)</div>
+        <input class="cfg-input" id="cfgLease" value="300" spellcheck="false"/>
+      </div>
       <div class="cfg-field" id="fldRangeStart">
-        <div class="cfg-label">Pool Start</div>
+        <div class="cfg-label" title="First address that will be handed out">POOL START — FIRST ADDRESS GIVEN</div>
         <input class="cfg-input" id="cfgRangeStart" value="192.168.1.100" spellcheck="false"/>
       </div>
       <div class="cfg-field" id="fldRangeEnd">
-        <div class="cfg-label">Pool End</div>
+        <div class="cfg-label" title="Last address that will be handed out">POOL END — LAST ADDRESS GIVEN</div>
         <input class="cfg-input" id="cfgRangeEnd" value="192.168.1.200" spellcheck="false"/>
       </div>
       <div class="cfg-field" id="fldGateway">
-        <div class="cfg-label">Gateway (optional — defaults to Server IP)</div>
+        <div class="cfg-label" title="The router address devices should use — leave blank to point them at this PC">GATEWAY (BLANK = THIS PC)</div>
         <input class="cfg-input" id="cfgGateway" value="" spellcheck="false" placeholder="auto"/>
       </div>
-      <div class="cfg-field" id="fldDns">
-        <div class="cfg-label">DNS Server (optional — omitted if blank)</div>
-        <input class="cfg-input" id="cfgDns" value="" spellcheck="false" placeholder="none"/>
-      </div>
-      <div class="cfg-field" id="fldLease" style="grid-column:1/-1">
-        <div class="cfg-label">Lease Duration (seconds) — shorter = faster re-acquire after restart</div>
-        <input class="cfg-input" id="cfgLease" value="300" spellcheck="false" style="width:120px"/>
+    </div>
+    <div class="adv-toggle" id="advToggle" title="Extra DHCP options — most jobs never need these">▸ ADVANCED OPTIONS</div>
+    <div class="adv-drawer" id="advDrawer">
+      <div class="config-grid">
+        <div class="cfg-field" id="fldDns">
+          <div class="cfg-label" title="DNS server handed to devices — blank sends none">DNS SERVER (BLANK = NONE)</div>
+          <input class="cfg-input" id="cfgDns" value="" spellcheck="false" placeholder="none"/>
+        </div>
+        <div class="cfg-field" id="fldDomainName">
+          <div class="cfg-label" title="DHCP option 15 — domain suffix for devices">DOMAIN NAME (OPT 15)</div>
+          <input class="cfg-input" id="cfgDomainName" value="" spellcheck="false" placeholder="none"/>
+        </div>
+        <div class="cfg-field" id="fldNtp">
+          <div class="cfg-label" title="DHCP option 42 — time server IP for cameras and recorders">NTP SERVER (OPT 42)</div>
+          <input class="cfg-input" id="cfgNtp" value="" spellcheck="false" placeholder="none"/>
+        </div>
+        <div class="cfg-field" id="fldTftpServer">
+          <div class="cfg-label" title="DHCP option 66 — TFTP server name for phones and provisioning">TFTP SERVER (OPT 66)</div>
+          <input class="cfg-input" id="cfgTftpServer" value="" spellcheck="false" placeholder="none"/>
+        </div>
+        <div class="cfg-field" id="fldBootFile">
+          <div class="cfg-label" title="DHCP option 67 — boot/config file name for provisioning">BOOT FILE (OPT 67)</div>
+          <input class="cfg-input" id="cfgBootFile" value="" spellcheck="false" placeholder="none"/>
+        </div>
+        <div class="cfg-field" id="fldOpt43">
+          <div class="cfg-label" title="DHCP option 43 — raw hex bytes, e.g. for pointing APs at a controller: 01 04 C0 A8 01 0A">VENDOR OPTION 43 (HEX BYTES)</div>
+          <input class="cfg-input" id="cfgOpt43" value="" spellcheck="false" placeholder="01 04 C0 A8 01 0A"/>
+        </div>
+        <div class="cfg-field" id="fldIdle">
+          <div class="cfg-label" title="Safety: stop serving after this many minutes with nothing served — 0 turns it off">AUTO-STOP AFTER IDLE (MINUTES, 0 = OFF)</div>
+          <input class="cfg-input" id="cfgIdle" value="30" spellcheck="false" style="width:80px"/>
+        </div>
       </div>
     </div>
   </div>
 
-  <button class="server-btn start" id="btnServer">⚡ START DHCP SERVER</button>
+  <div class="btn-row">
+    <button class="side-btn" id="btnQuickStart" title="Pick the right adapter, fill everything in, and start serving — one click">⚡ QUICK START</button>
+    <button class="server-btn start" id="btnServer">▶ SERVE ALL DEVICES</button>
+    <button class="side-btn" id="btnScanWire" title="Knock on the wire and see who's serving DHCP — no serving, no changes">◉ SCAN WIRE</button>
+    <button class="side-btn" id="btnSelfTest" title="Check adapter, port, firewall and look for other DHCP servers">⚕ SELF-TEST</button>
+  </div>
 
   <div style="flex:1;min-height:0;display:flex;flex-direction:column;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-      <div class="lbl" style="margin-bottom:0;">Active Leases <span id="leaseCount" style="color:var(--green);margin-left:4px;">0</span></div>
+      <div class="lbl" style="margin-bottom:0;">Devices On The Wire
+        <span id="devCount" style="color:var(--green);margin-left:4px;letter-spacing:normal;">0</span>
+      </div>
       <div class="toolbar-row">
         <button id="btnExportCsv" class="tool-btn" disabled title="Copy lease table as CSV">⎘ CSV</button>
-        <button id="btnReleaseAll" class="tool-btn" disabled title="Release all leases">✕ RELEASE ALL</button>
+        <button id="btnReleaseAll" class="tool-btn" disabled title="Clear every lease and offer">✕ RELEASE ALL</button>
       </div>
     </div>
-    <div class="lease-panel">
-      <div class="lease-header">
+    <div class="dev-panel">
+      <div class="dev-header">
+        <span>STATUS</span>
         <span>IP ADDRESS</span>
         <span>MAC ADDRESS</span>
         <span>VENDOR</span>
         <span>HOSTNAME</span>
-        <span>TTL</span>
-        <span>ACTIONS</span>
+        <span>ACTIVITY</span>
+        <span style="text-align:right;">ACTIONS</span>
       </div>
-      <div class="lease-list" id="leaseList">
+      <div class="dev-list" id="devList">
         <div class="empty-state" id="emptyState">
           <div class="empty-icon">📡</div>
-          <div class="empty-text">WAITING FOR DEVICES</div>
+          <div class="empty-text">LISTENING — DEVICES THAT ASK FOR AN ADDRESS APPEAR HERE</div>
         </div>
       </div>
     </div>
@@ -429,6 +598,15 @@ body::after {
 </div>
 
 <div class="link-toast" id="toast"></div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">TITLE</div>
+    <div class="modal-body" id="modalBody"></div>
+    <input class="modal-input" id="modalInput" style="display:none;" spellcheck="false"/>
+    <div class="modal-btns" id="modalBtns"></div>
+  </div>
+</div>
 
 <script>
 // ── THEME ENGINE ──────────────────────────────────────────────────────────────
@@ -523,29 +701,793 @@ function loadSavedTheme() {
   applyPalette('#ff9f0a', '#060810', 'amber', '#ffe0a0');
 }
 
-// ── APP LOGIC ─────────────────────────────────────────────────────────────────
-let serverRunning = false;
-let leases = [];
-let expiryTickTimer = null;
+// ── MODAL SYSTEM ──────────────────────────────────────────────────────────────
+// modalShow({title, bodyHtml, input?, buttons:[{label, style, value}]}) → Promise<value|input string|null>
+let modalResolve = null;
+
+function modalShow(opts) {
+  return new Promise(resolve => {
+    modalResolve = resolve;
+    document.getElementById('modalTitle').textContent = opts.title || '';
+    document.getElementById('modalBody').innerHTML = opts.bodyHtml || '';
+    const input = document.getElementById('modalInput');
+    if (opts.input !== undefined) {
+      input.style.display = 'block';
+      input.value = opts.input || '';
+      input.placeholder = opts.placeholder || '';
+      setTimeout(() => input.focus(), 50);
+    } else {
+      input.style.display = 'none';
+    }
+    const btns = document.getElementById('modalBtns');
+    btns.innerHTML = '';
+    for (const b of opts.buttons) {
+      const el = document.createElement('button');
+      el.className = 'modal-btn ' + (b.style || 'ghost');
+      el.textContent = b.label;
+      el.onclick = () => modalClose(b.value === '__INPUT__' ? input.value.trim() : b.value);
+      btns.appendChild(el);
+    }
+    document.getElementById('modalOverlay').classList.add('visible');
+  });
+}
+
+function modalClose(value) {
+  document.getElementById('modalOverlay').classList.remove('visible');
+  if (modalResolve) { modalResolve(value); modalResolve = null; }
+}
+
+document.getElementById('modalOverlay').addEventListener('mousedown', e => {
+  if (e.target.id === 'modalOverlay') modalClose(null);
+});
+document.getElementById('modalInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') modalClose(e.target.value.trim());
+  if (e.key === 'Escape') modalClose(null);
+});
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+function fmtExpiry(expires) {
+  if (!expires) return '—';
+  const secs = Math.max(0, Math.round((expires - Date.now()) / 1000));
+  if (secs <= 0) return 'EXP';
+  const m = Math.floor(secs / 60), s = secs % 60;
+  return m > 0 ? `${m}m ${s}s` : `${s}s`;
+}
+
+function ago(ts) {
+  if (!ts) return '—';
+  const secs = Math.max(0, Math.round((Date.now() - ts) / 1000));
+  if (secs < 60) return secs + 's';
+  const m = Math.floor(secs / 60);
+  if (m < 60) return m + 'm';
+  return Math.floor(m / 60) + 'h ' + (m % 60) + 'm';
+}
+
+let toastTimer = null;
+function showToast(msg, cls) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'link-toast' + (cls ? ' ' + cls : '');
+  t.style.display = 'block';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.style.display = 'none'; }, 4500);
+}
+
+function log(msg, cls='') {
+  const d = document.createElement('div');
+  if (cls) d.className = cls;
+  d.textContent = '› ' + msg;
+  logStrip.appendChild(d);
+  while (logStrip.children.length > 200) logStrip.removeChild(logStrip.firstChild);
+  logStrip.scrollTop = logStrip.scrollHeight;
+}
+
+// ── DOM REFS / STATE ──────────────────────────────────────────────────────────
+let currentMode = 'off';
+let currentTargets = [];
+let deviceList = [];
+let knownForeignServers = [];
+const reservationEdits = new Map();   // mac -> in-progress value while editing
+
+const adapterSel    = document.getElementById('adapterSel');
+const statusDot     = document.getElementById('statusDot');
+const statusTxt     = document.getElementById('statusTxt');
+const modeBadge     = document.getElementById('modeBadge');
+const modeBadgeTxt  = document.getElementById('modeBadgeTxt');
+const btnServer     = document.getElementById('btnServer');
+const btnQuickStart = document.getElementById('btnQuickStart');
+const btnSelfTest   = document.getElementById('btnSelfTest');
+const btnScanWire   = document.getElementById('btnScanWire');
+const btnReleaseAll = document.getElementById('btnReleaseAll');
+const btnExportCsv  = document.getElementById('btnExportCsv');
+const btnCopyLog    = document.getElementById('btnCopyLog');
+const devListEl     = document.getElementById('devList');
+const devCount      = document.getElementById('devCount');
+const logStrip      = document.getElementById('logStrip');
+const profileSel    = document.getElementById('profileSel');
 
 document.getElementById('btnMin').onclick      = () => window.api.minimize();
 document.getElementById('btnClose').onclick    = () => window.api.close();
 document.getElementById('btn-palette').onclick = e => togglePalette(e);
 
-const adapterSel    = document.getElementById('adapterSel');
-const statusDot     = document.getElementById('statusDot');
-const statusTxt     = document.getElementById('statusTxt');
-const btnServer     = document.getElementById('btnServer');
-const btnReleaseAll = document.getElementById('btnReleaseAll');
-const btnExportCsv  = document.getElementById('btnExportCsv');
-const btnCopyLog    = document.getElementById('btnCopyLog');
-const leaseList     = document.getElementById('leaseList');
-const leaseCount    = document.getElementById('leaseCount');
-const logStrip      = document.getElementById('logStrip');
+// Advanced drawer
+document.getElementById('advToggle').onclick = () => {
+  const d = document.getElementById('advDrawer');
+  const open = d.classList.toggle('open');
+  document.getElementById('advToggle').textContent = (open ? '▾' : '▸') + ' ADVANCED OPTIONS';
+};
 
+// ── CONFIG GATHER / FILL ──────────────────────────────────────────────────────
+const CFG_FIELDS = ['cfgServerIp','cfgSubnet','cfgRangeStart','cfgRangeEnd','cfgGateway','cfgDns','cfgLease',
+                    'cfgDomainName','cfgNtp','cfgTftpServer','cfgBootFile','cfgOpt43'];
+
+function gatherConfig() {
+  return {
+    adapterName: adapterSel.value,
+    adapterIp:   document.getElementById('cfgServerIp').value.trim(),
+    subnet:      document.getElementById('cfgSubnet').value.trim(),
+    rangeStart:  document.getElementById('cfgRangeStart').value.trim(),
+    rangeEnd:    document.getElementById('cfgRangeEnd').value.trim(),
+    gateway:     document.getElementById('cfgGateway').value.trim(),
+    dns:         document.getElementById('cfgDns').value.trim(),
+    lease:       Math.max(30, parseInt(document.getElementById('cfgLease').value.trim()) || 300),
+    domainName:  document.getElementById('cfgDomainName').value.trim(),
+    ntp:         document.getElementById('cfgNtp').value.trim(),
+    tftpServer:  document.getElementById('cfgTftpServer').value.trim(),
+    bootFile:    document.getElementById('cfgBootFile').value.trim(),
+    opt43:       document.getElementById('cfgOpt43').value.trim(),
+  };
+}
+
+function fillConfig(cfg) {
+  if (!cfg) return;
+  const set = (id, v) => { if (v !== undefined && v !== null) document.getElementById(id).value = v; };
+  set('cfgServerIp',   cfg.adapterIp ?? cfg.serverIp);
+  set('cfgSubnet',     cfg.subnet);
+  set('cfgRangeStart', cfg.rangeStart);
+  set('cfgRangeEnd',   cfg.rangeEnd);
+  set('cfgGateway',    cfg.gateway ?? '');
+  set('cfgDns',        cfg.dns ?? '');
+  set('cfgLease',      cfg.lease ?? 300);
+  set('cfgDomainName', cfg.domainName ?? '');
+  set('cfgNtp',        cfg.ntp ?? '');
+  set('cfgTftpServer', cfg.tftpServer ?? '');
+  set('cfgBootFile',   cfg.bootFile ?? '');
+  set('cfgOpt43',      cfg.opt43 ?? '');
+  clearFieldErrors();
+  schedulePreview();
+}
+
+function highlightFieldError(msg) {
+  const m = msg.toLowerCase();
+  if (m.includes('server ip'))  document.getElementById('fldServerIp').classList.add('error');
+  if (m.includes('subnet'))     document.getElementById('fldSubnet').classList.add('error');
+  if (m.includes('pool start')) document.getElementById('fldRangeStart').classList.add('error');
+  if (m.includes('pool end'))   document.getElementById('fldRangeEnd').classList.add('error');
+  if (m.includes('gateway'))    document.getElementById('fldGateway').classList.add('error');
+  if (m.includes('dns'))        document.getElementById('fldDns').classList.add('error');
+  if (m.includes('ntp'))        document.getElementById('fldNtp').classList.add('error');
+  if (m.includes('option 43'))  document.getElementById('fldOpt43').classList.add('error');
+  if (m.includes('domain'))     document.getElementById('fldDomainName').classList.add('error');
+  if (m.includes('tftp'))       document.getElementById('fldTftpServer').classList.add('error');
+  if (m.includes('boot'))       document.getElementById('fldBootFile').classList.add('error');
+  if (m.includes('pool') && m.includes('less')) {
+    document.getElementById('fldRangeStart').classList.add('error');
+    document.getElementById('fldRangeEnd').classList.add('error');
+  }
+}
+
+function clearFieldErrors() {
+  ['fldServerIp','fldSubnet','fldRangeStart','fldRangeEnd','fldGateway','fldDns','fldLease',
+   'fldDomainName','fldNtp','fldTftpServer','fldBootFile','fldOpt43','fldIdle'].forEach(id =>
+    document.getElementById(id).classList.remove('error')
+  );
+}
+
+// Push the form to main as the dry-run preview config (debounced)
+let previewTimer = null;
+function schedulePreview() {
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(async () => {
+    await window.api.setPreviewConfig(gatherConfig());
+  }, 400);
+}
+CFG_FIELDS.forEach(id => document.getElementById(id).addEventListener('input', () => {
+  clearFieldErrors();
+  schedulePreview();
+}));
+
+// Idle minutes — saved on change
+document.getElementById('cfgIdle').addEventListener('change', async (e) => {
+  const r = await window.api.setIdleMinutes(e.target.value.trim());
+  if (r.ok) e.target.value = r.value;
+});
+
+// ── PROFILES ──────────────────────────────────────────────────────────────────
+async function refreshProfiles(selectName) {
+  const names = await window.api.profilesList();
+  profileSel.innerHTML = '<option value="">— profiles —</option>';
+  for (const n of names) {
+    const o = document.createElement('option');
+    o.value = n; o.textContent = n;
+    if (n === selectName) o.selected = true;
+    profileSel.appendChild(o);
+  }
+  document.getElementById('btnProfileDelete').disabled = !profileSel.value;
+}
+
+profileSel.onchange = async () => {
+  document.getElementById('btnProfileDelete').disabled = !profileSel.value;
+  if (!profileSel.value) return;
+  const cfg = await window.api.profilesLoad(profileSel.value);
+  if (cfg) { fillConfig(cfg); log('Profile loaded: ' + profileSel.value, 'info'); }
+};
+
+document.getElementById('btnProfileSave').onclick = async () => {
+  const name = await modalShow({
+    title: 'Save Profile',
+    bodyHtml: 'Name these settings so you can pull them back on any job.',
+    input: profileSel.value || '',
+    placeholder: 'e.g. CAMERA BENCH 192.168.100.x',
+    buttons: [
+      { label: 'CANCEL', style: 'ghost', value: null },
+      { label: 'SAVE',   style: 'primary', value: '__INPUT__' },
+    ],
+  });
+  if (!name) return;
+  const r = await window.api.profilesSave(name, gatherConfig());
+  if (r.ok) { await refreshProfiles(r.name); showToast('⊕ PROFILE SAVED — ' + r.name); }
+  else log(r.msg, 'err');
+};
+
+document.getElementById('btnProfileDelete').onclick = async () => {
+  if (!profileSel.value) return;
+  const sure = await modalShow({
+    title: 'Delete Profile',
+    bodyHtml: 'Delete <span class="hl">' + esc(profileSel.value) + '</span>?',
+    buttons: [
+      { label: 'CANCEL', style: 'ghost', value: null },
+      { label: 'DELETE', style: 'danger', value: true },
+    ],
+  });
+  if (!sure) return;
+  await window.api.profilesDelete(profileSel.value);
+  await refreshProfiles();
+};
+
+// ── ADAPTERS ──────────────────────────────────────────────────────────────────
+window.api.onAdapterState(data => {
+  if (data.event === 'poll' && data.adapters) {
+    const cur = adapterSel.value;
+    adapterSel.innerHTML = '<option value="">— select adapter —</option>';
+    for (const a of data.adapters) {
+      const opt = document.createElement('option');
+      opt.value = a.name;
+      opt.textContent = a.name + (a.ip ? '  [' + a.ip + (a.apipa ? ' — no DHCP heard' : '') + ']' : '  [no link]');
+      if (a.name === cur) opt.selected = true;
+      adapterSel.appendChild(opt);
+    }
+    updateStatus(data.adapters);
+  }
+  if (data.event === 'link-up')   { showToast('⚡ LINK UP — ' + data.name); log('Link UP: ' + data.name, 'warn'); }
+  if (data.event === 'link-down') { log('Link DOWN: ' + data.name, 'err'); }
+});
+
+function updateStatus(adapters) {
+  const a = adapters ? adapters.find(x => x.name === adapterSel.value) : null;
+  if (!a) { statusDot.className = 'status-dot'; statusTxt.textContent = 'NO LINK'; return; }
+  if (a.connected && a.apipa) { statusDot.className = 'status-dot blink'; statusTxt.textContent = 'NO USABLE IP'; return; }
+  statusDot.className = a.connected ? 'status-dot active' : 'status-dot';
+  statusTxt.textContent = a.connected ? 'LINK UP' : 'NO LINK';
+}
+
+adapterSel.onchange = async () => {
+  window.api.getAdapters().then(updateStatus);
+  if (!adapterSel.value || isServing()) return;
+  const cfg = await window.api.getAdapterConfig(adapterSel.value);
+  if (!cfg) return;
+  fillConfig({ ...cfg, adapterIp: cfg.serverIp });
+  log('Settings filled in from ' + adapterSel.value, 'info');
+};
+
+function isServing() { return currentMode === 'serve-all' || currentMode === 'serve-targeted'; }
+
+// ── MODE HANDLING ─────────────────────────────────────────────────────────────
+window.api.onModeChanged(data => {
+  currentMode = data.mode;
+  currentTargets = data.targets || [];
+  renderModeBadge();
+  renderServerButton();
+  renderDevices();
+});
+
+function renderModeBadge() {
+  if (currentMode === 'listen') {
+    modeBadge.className = 'mode-badge listen';
+    modeBadgeTxt.textContent = 'LISTENING';
+  } else if (currentMode === 'serve-all') {
+    modeBadge.className = 'mode-badge serving';
+    modeBadgeTxt.textContent = 'SERVING ALL';
+  } else if (currentMode === 'serve-targeted') {
+    modeBadge.className = 'mode-badge serving';
+    modeBadgeTxt.textContent = 'SERVING ' + currentTargets.length + ' TARGET' + (currentTargets.length !== 1 ? 'S' : '');
+  } else {
+    modeBadge.className = 'mode-badge off';
+    modeBadgeTxt.textContent = 'OFFLINE';
+  }
+}
+
+function renderServerButton() {
+  if (currentMode === 'serve-all') {
+    btnServer.className = 'server-btn stop';
+    btnServer.textContent = '■ STOP SERVING';
+  } else if (currentMode === 'serve-targeted') {
+    btnServer.className = 'server-btn stop';
+    btnServer.textContent = '■ STOP — SERVING ' + currentTargets.length + ' TARGET' + (currentTargets.length !== 1 ? 'S' : '');
+  } else {
+    btnServer.className = 'server-btn start';
+    btnServer.textContent = '▶ SERVE ALL DEVICES';
+  }
+}
+
+// ── SERVE FLOWS ───────────────────────────────────────────────────────────────
+async function validateForm() {
+  clearFieldErrors();
+  const opts = gatherConfig();
+  const v = await window.api.validateConfig(opts);
+  if (!v.ok) {
+    log('Config error: ' + v.msg, 'err');
+    highlightFieldError(v.msg);
+    showToast('⚠ ' + v.msg, 'err');
+    return null;
+  }
+  return opts;
+}
+
+// Probe for other DHCP servers; returns true to proceed, false to abort.
+async function rogueGate() {
+  log('Checking for other DHCP servers… (a few seconds)', 'info');
+  showToast('◷ SCANNING FOR DHCP SERVERS…');
+  const probe = await window.api.probeDhcp();
+  if (!probe.ok) { log(probe.msg || 'Active scan unavailable — relying on passive detection', 'warn'); return true; }
+  if (!probe.servers.length) { log('No other DHCP server answered', 'ok'); return true; }
+  const list = probe.servers.map(esc).join(', ');
+  const go = await modalShow({
+    title: '⚠ Another DHCP Server Is Live',
+    bodyHtml: 'Something already answered at <span class="hl">' + list + '</span>.<br><br>' +
+              'Serving <b>everyone</b> on a network that already has DHCP can knock devices offline. ' +
+              'If you only need one device, use the <span class="hl">SERVE</span> button on its row instead.',
+    buttons: [
+      { label: 'CANCEL',        style: 'ghost',  value: false },
+      { label: 'SERVE ANYWAY',  style: 'danger', value: true },
+    ],
+  });
+  return !!go;
+}
+
+btnServer.onclick = async () => {
+  if (isServing()) {
+    await window.api.stopServing();
+    return;
+  }
+  if (!adapterSel.value) {
+    log('Select a network adapter before serving', 'err');
+    showToast('⚠ SELECT AN ADAPTER FIRST', 'warn');
+    return;
+  }
+  const opts = await validateForm();
+  if (!opts) return;
+  if (!await rogueGate()) { log('Serve-all cancelled', 'warn'); return; }
+  const r = await window.api.serveAll(opts);
+  if (r.ok) {
+    if (r.warning) { log(r.warning, 'warn'); showToast('⚠ ' + r.warning, 'warn'); }
+  } else {
+    log('Failed: ' + r.msg, 'err');
+    highlightFieldError(r.msg || '');
+  }
+};
+
+async function serveDevice(mac) {
+  const opts = await validateForm();
+  if (!opts) return;
+  const r = await window.api.serveDevice(mac, opts);
+  if (!r.ok) { log(r.msg, 'err'); showToast('⚠ ' + r.msg, 'err'); return; }
+  showToast('◎ TARGETING ' + mac.toUpperCase());
+  if (knownForeignServers.length) {
+    showToast('⚠ NOTE: OTHER DHCP AT ' + knownForeignServers.join(', '), 'warn');
+  }
+}
+
+async function unserveDevice(mac) {
+  await window.api.unserveDevice(mac);
+}
+
+// ── QUICK START ───────────────────────────────────────────────────────────────
+btnQuickStart.onclick = async () => {
+  btnQuickStart.disabled = true;
+  try {
+    log('Quick Start — picking the best adapter…', 'info');
+    let qs = await window.api.quickStart();
+
+    if (!qs.ok && qs.reason === 'needs-static') {
+      const fix = await modalShow({
+        title: 'No Usable Address',
+        bodyHtml: '<span class="hl">' + esc(qs.adapter) + '</span> is plugged in but has no usable IP — ' +
+                  'there\'s nothing on this network handing out addresses (that\'s probably why you\'re here).<br><br>' +
+                  'Give this PC a static address (<span class="hl">192.168.100.1</span> or similar) so it can serve? ' +
+                  'It reverts automatically when you quit.',
+        buttons: [
+          { label: 'CANCEL', style: 'ghost', value: false },
+          { label: 'SET STATIC IP', style: 'primary', value: true },
+        ],
+      });
+      if (!fix) { log('Quick Start cancelled', 'warn'); return; }
+      log('Setting static IP on ' + qs.adapter + '…', 'info');
+      const sa = await window.api.staticAssistApply(qs.adapter);
+      if (!sa.ok) { log('Static IP failed: ' + sa.msg, 'err'); showToast('⚠ ' + sa.msg, 'err'); return; }
+      log('Adapter set to ' + sa.ip + ' — reverts on quit', 'ok');
+      qs = await window.api.quickStart();
+    }
+
+    if (!qs.ok) {
+      log(qs.msg || 'Quick Start could not find a usable adapter', 'err');
+      showToast('⚠ ' + (qs.msg || 'NO USABLE ADAPTER'), 'err');
+      return;
+    }
+
+    adapterSel.value = qs.cfg.adapterName;
+    fillConfig({ ...qs.cfg, adapterIp: qs.cfg.serverIp });
+    log('Settings ready — ' + qs.cfg.adapterName + ' @ ' + qs.cfg.serverIp, 'ok');
+
+    const opts = await validateForm();
+    if (!opts) return;
+    if (!await rogueGate()) { log('Quick Start cancelled at serve step', 'warn'); return; }
+    const r = await window.api.serveAll(opts);
+    if (r.ok) {
+      showToast('⚡ QUICK START — SERVING');
+      if (r.warning) { log(r.warning, 'warn'); showToast('⚠ ' + r.warning, 'warn'); }
+    } else {
+      log('Failed: ' + r.msg, 'err');
+    }
+  } finally {
+    btnQuickStart.disabled = false;
+  }
+};
+
+// ── SELF-TEST ─────────────────────────────────────────────────────────────────
+btnSelfTest.onclick = async () => {
+  await runSelfTest();
+};
+
+async function runSelfTest() {
+  const checks = await window.api.selfTest(adapterSel.value || null);
+  const rows = checks.map(c =>
+    '<div class="st-row"><div class="st-dot ' + (c.ok ? 'ok' : 'fail') + '"></div>' +
+    '<div class="st-label">' + esc(c.label) + '</div>' +
+    '<div class="st-detail">' + esc(c.detail) + '</div></div>'
+  ).join('');
+  const action = await modalShow({
+    title: '⚕ Self-Test',
+    bodyHtml: rows,
+    buttons: [
+      { label: 'SCAN FOR DHCP SERVERS', style: 'primary', value: 'scan' },
+      { label: 'RUN AGAIN', style: 'ghost', value: 'again' },
+      { label: 'CLOSE', style: 'ghost', value: null },
+    ],
+  });
+  if (action === 'again') return runSelfTest();
+  if (action === 'scan')  return runWireScan();
+}
+
+// ── SCAN THE WIRE (standalone) ────────────────────────────────────────────────
+btnScanWire.onclick = () => runWireScan();
+
+async function runWireScan() {
+  let again = true;
+  while (again) {
+    again = false;
+
+    // Live state — the window is ~6s, so make the wait visible
+    btnScanWire.disabled = true;
+    btnScanWire.textContent = '◷ SCANNING…';
+    showToast('◷ SCANNING THE WIRE…');
+    log('Active scan — asking the wire who serves DHCP… (a few seconds)', 'info');
+
+    let probe;
+    try {
+      probe = await window.api.probeDhcp();
+    } finally {
+      btnScanWire.disabled = false;
+      btnScanWire.textContent = '◉ SCAN WIRE';
+    }
+
+    if (!probe.ok) {
+      showToast('⚠ ' + (probe.msg || 'SCAN UNAVAILABLE'), 'warn');
+      await modalShow({
+        title: '◉ Scan The Wire',
+        bodyHtml: '<div style="color:var(--amber)">Couldn\'t run the scan.</div>' +
+                  '<div style="margin-top:6px;font-size:11px;">' + esc(probe.msg || 'The engine may be offline.') + '</div>',
+        buttons: [{ label: 'CLOSE', style: 'ghost', value: null }],
+      });
+      return;
+    }
+
+    const n = probe.servers.length;
+    const clients = probe.clientsHeard || 0;
+    let body;
+
+    if (n) {
+      knownForeignServers = probe.servers;
+      showToast('⚠ DHCP FOUND: ' + probe.servers.join(', '), 'err');
+      const rows = probe.servers.map(s =>
+        '<div class="st-row"><div class="st-dot fail"></div>' +
+        '<div class="st-label">DHCP SERVER</div>' +
+        '<div class="st-detail">' + esc(s) + ' is handing out addresses</div></div>'
+      ).join('');
+      body = '<div style="margin-bottom:10px;">Found <span class="hl">' + n + '</span> other DHCP server' +
+             (n !== 1 ? 's' : '') + ' on this wire:</div>' + rows +
+             '<div style="margin-top:12px;font-size:11px;color:rgba(var(--ar),var(--ag),var(--ab),.5);line-height:1.6;">' +
+             'Serving <b>everyone</b> here can knock devices offline. If you only need one device, use its row\'s ' +
+             '<span class="hl">SERVE</span> button instead.</div>';
+    } else {
+      showToast('✓ NO OTHER DHCP SERVER ANSWERED');
+      body = '<div style="color:var(--green);font-weight:700;margin-bottom:6px;">✓ No other DHCP server answered.</div>' +
+             '<div style="font-size:11px;color:rgba(var(--ar),var(--ag),var(--ab),.55);line-height:1.6;">' +
+             'Nothing else on this segment is handing out addresses — safe to serve.</div>';
+    }
+
+    if (clients) {
+      body += '<div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(var(--ar),var(--ag),var(--ab),.12);' +
+              'font-size:11px;color:rgba(var(--lr),var(--lg),var(--lb),.6);">' +
+              'Also heard <span class="hl">' + clients + '</span> device' + (clients !== 1 ? 's' : '') +
+              ' asking for an address during the scan — ' + (clients !== 1 ? 'they\'re' : 'it\'s') + ' in the table below.</div>';
+    }
+
+    const action = await modalShow({
+      title: '◉ Scan The Wire',
+      bodyHtml: body,
+      buttons: [
+        { label: 'SCAN AGAIN', style: 'primary', value: 'again' },
+        { label: 'CLOSE', style: 'ghost', value: null },
+      ],
+    });
+    if (action === 'again') again = true;
+  }
+}
+
+// ── STATIC ASSIST RECOVERY / EVENTS ───────────────────────────────────────────
+window.api.onStaticAssistPending(async rec => {
+  const revert = await modalShow({
+    title: 'Leftover Static IP',
+    bodyHtml: 'Last session set <span class="hl">' + esc(rec.adapter) + '</span> to <span class="hl">' +
+              esc(rec.applied) + '</span> and didn\'t get to revert it (crash or force-close).<br><br>Put it back now?',
+    buttons: [
+      { label: 'KEEP IT', style: 'ghost', value: false },
+      { label: 'REVERT ADAPTER', style: 'primary', value: true },
+    ],
+  });
+  if (revert) {
+    const r = await window.api.staticAssistRevert();
+    log(r.ok ? 'Adapter reverted' : 'Revert failed — check adapter settings manually', r.ok ? 'ok' : 'err');
+  }
+});
+
+window.api.onRogueDetected(d => {
+  if (!knownForeignServers.includes(d.server)) knownForeignServers.push(d.server);
+  showToast('⚠ OTHER DHCP SERVER ON WIRE: ' + d.server, 'err');
+});
+
+window.api.onPort67Status(d => {
+  showToast('⚠ UDP 67 HELD BY ' + d.squatter, 'err');
+});
+
+window.api.onAutoStopped(d => {
+  showToast('⏻ AUTO-STOPPED AFTER ' + d.idleMinutes + ' MIN IDLE — STILL LISTENING', 'warn');
+});
+
+window.api.onLeaseGranted(data => {
+  const label = data.hostname ? data.hostname : data.vendor;
+  log('Lease → ' + data.ip + '  ' + data.mac + '  ' + data.vendor + (data.hostname ? '  ' + data.hostname : ''), 'ok');
+  showToast('📶 ' + data.ip + ' — ' + label);
+});
+
+window.api.onLog(data => log(data.msg));
+
+// ── DEVICE TABLE ──────────────────────────────────────────────────────────────
+window.api.onDevicesUpdated(list => {
+  deviceList = list || [];
+  renderDevices();
+});
+
+const STATE_ORDER = { asking: 0, offered: 1, declined: 2, leased: 3, quiet: 4 };
+const STATE_PILL  = {
+  asking:   'ASKING',
+  offered:  'OFFERED',
+  leased:   'LEASED',
+  declined: 'CONFLICT',
+  quiet:    'WENT QUIET',
+};
+
+function ipNum(ip) { return ip ? ip.split('.').reduce((a, o) => (a << 8) + (+o), 0) >>> 0 : 0; }
+
+function renderDevices() {
+  const leased = deviceList.filter(d => d.state === 'leased').length;
+  devCount.textContent = deviceList.length + (leased ? ' · ' + leased + ' LEASED' : '');
+  btnReleaseAll.disabled = !deviceList.some(d => d.state === 'leased' || d.state === 'offered');
+  btnExportCsv.disabled  = leased === 0;
+
+  if (!deviceList.length) {
+    const txt = currentMode === 'off'
+      ? 'ENGINE OFFLINE'
+      : 'LISTENING — DEVICES THAT ASK FOR AN ADDRESS APPEAR HERE';
+    devListEl.innerHTML = '<div class="empty-state"><div class="empty-icon">📡</div><div class="empty-text">' + txt + '</div></div>';
+    return;
+  }
+
+  const sorted = deviceList.slice().sort((a, b) => {
+    const so = STATE_ORDER[a.state] - STATE_ORDER[b.state];
+    if (so !== 0) return so;
+    if (a.state === 'leased') return ipNum(a.ip) - ipNum(b.ip);
+    return b.lastSeen - a.lastSeen;
+  });
+
+  devListEl.innerHTML = '';
+  for (const d of sorted) {
+    devListEl.appendChild(buildRow(d));
+  }
+}
+
+function buildRow(d) {
+  const row = document.createElement('div');
+  row.className = 'dev-row ' + d.state;
+  row.dataset.mac = d.mac;
+
+  const mac      = esc(d.mac);
+  const vendor   = esc(d.vendor || '—');
+  const hostname = esc(d.hostname || '—');
+  const editing  = reservationEdits.has(d.mac);
+
+  // STATUS
+  let pillTxt = STATE_PILL[d.state] || d.state.toUpperCase();
+  if (d.targeted && currentMode === 'serve-targeted') pillTxt = '◎ ' + pillTxt;
+  let html = '<div><span class="pill ' + d.state + '">' + pillTxt + '</span></div>';
+
+  // IP
+  if (editing) {
+    html += '<div class="dev-ip"><input class="resv-input" data-resv="' + mac + '" value="' +
+            esc(reservationEdits.get(d.mac)) + '" spellcheck="false"/></div>';
+  } else if (d.state === 'leased' || d.state === 'offered') {
+    const ip = esc(d.ip);
+    html += '<div class="dev-ip">' +
+      (d.reserved ? '<span class="resv-star" title="Reserved: always gets ' + esc(d.reserved) + '">★</span>' : '') +
+      '<span>' + ip + '</span>' +
+      '<button class="btn-copy" data-copy="' + ip + '">⎘</button></div>';
+  } else if (d.state === 'asking' && d.wouldOffer) {
+    html += '<div class="dev-ip">' +
+      (d.reserved ? '<span class="resv-star" title="Reserved: always gets ' + esc(d.reserved) + '">★</span>' : '') +
+      '<span class="would" title="Would be offered this address">→ ' + esc(d.wouldOffer) + '</span></div>';
+  } else {
+    html += '<div class="dev-ip">' +
+      (d.reserved ? '<span class="resv-star" title="Reserved: always gets ' + esc(d.reserved) + '">★</span>' : '') +
+      '<span style="opacity:.35">—</span></div>';
+  }
+
+  // MAC
+  html += '<div class="dev-mac"><span>' + mac + '</span><button class="btn-copy" data-copy="' + mac + '">⎘</button></div>';
+
+  // VENDOR / HOSTNAME
+  html += '<div class="dev-vendor" title="' + vendor + '">' + vendor + '</div>';
+  html += '<div class="dev-hostname" title="' + hostname + '">' + hostname + '</div>';
+
+  // ACTIVITY
+  let act = '';
+  if (d.state === 'asking')        act = d.attempts + '× · <span data-ago="' + d.lastSeen + '">' + ago(d.lastSeen) + '</span> ago';
+  else if (d.state === 'offered')  act = 'offer sent…';
+  else if (d.state === 'leased')   act = 'expires <span data-expires="' + (d.expires || 0) + '">' + fmtExpiry(d.expires) + '</span>';
+  else if (d.state === 'declined') act = 'reported conflict';
+  else if (d.state === 'quiet')    act = 'quiet <span data-ago="' + d.lastSeen + '">' + ago(d.lastSeen) + '</span>';
+  html += '<div class="dev-activity">' + act + '</div>';
+
+  // ACTIONS
+  let actions = '';
+  if (editing) {
+    actions += '<button class="btn-open" data-resv-save="' + mac + '">SAVE</button>';
+    actions += '<button class="btn-revoke" data-resv-cancel="' + mac + '">ESC</button>';
+  } else {
+    if (!isServingAll()) {
+      if (d.targeted) actions += '<button class="btn-serve targeted" data-unserve="' + mac + '" title="Stop answering this device">◎ SERVING</button>';
+      else            actions += '<button class="btn-serve" data-serve="' + mac + '" title="Answer ONLY this device — safest option on a live network">SERVE</button>';
+    }
+    if (d.state === 'leased') {
+      actions += '<button class="btn-open" data-ip="' + esc(d.ip) + '" title="Open device in browser">OPEN</button>';
+    }
+    actions += '<button class="btn-pin' + (d.reserved ? ' pinned' : '') + '" data-pin="' + mac + '" title="' +
+               (d.reserved ? 'Reserved at ' + esc(d.reserved) + ' — click to clear' : 'Pin this device to a fixed address') + '">' +
+               (d.reserved ? '★' : '☆') + '</button>';
+    if (d.state === 'leased' || d.state === 'offered') {
+      actions += '<button class="btn-revoke" data-revoke="' + mac + '" title="Take the address back">✕</button>';
+    }
+  }
+  html += '<div class="dev-actions">' + actions + '</div>';
+
+  row.innerHTML = html;
+  wireRow(row, d);
+  return row;
+}
+
+function isServingAll() { return currentMode === 'serve-all'; }
+
+function wireRow(row, d) {
+  row.querySelectorAll('.btn-copy').forEach(b => {
+    b.onclick = () => navigator.clipboard.writeText(b.dataset.copy).then(() => {
+      b.textContent = '✓'; b.classList.add('copied');
+      setTimeout(() => { b.textContent = '⎘'; b.classList.remove('copied'); }, 1500);
+    });
+  });
+  const open = row.querySelector('[data-ip]');
+  if (open) open.onclick = () => window.api.openBrowser(open.dataset.ip);
+  const serve = row.querySelector('[data-serve]');
+  if (serve) serve.onclick = () => serveDevice(serve.dataset.serve);
+  const unserve = row.querySelector('[data-unserve]');
+  if (unserve) unserve.onclick = () => unserveDevice(unserve.dataset.unserve);
+  const revoke = row.querySelector('[data-revoke]');
+  if (revoke) revoke.onclick = async () => {
+    const r = await window.api.revokeLease(revoke.dataset.revoke);
+    if (r.ok) log('Revoked ' + r.ip, 'warn');
+  };
+  const pin = row.querySelector('[data-pin]');
+  if (pin) pin.onclick = async () => {
+    if (d.reserved) {
+      await window.api.clearReservation(d.mac);
+      showToast('☆ RESERVATION CLEARED — ' + d.mac.toUpperCase());
+    } else {
+      reservationEdits.set(d.mac, d.ip || d.wouldOffer || '');
+      renderDevices();
+    }
+  };
+  const resvInput = row.querySelector('[data-resv]');
+  if (resvInput) {
+    setTimeout(() => { resvInput.focus(); resvInput.select(); }, 30);
+    resvInput.oninput = () => reservationEdits.set(d.mac, resvInput.value);
+    resvInput.onkeydown = async (e) => {
+      if (e.key === 'Enter')  saveReservation(d.mac);
+      if (e.key === 'Escape') { reservationEdits.delete(d.mac); renderDevices(); }
+    };
+  }
+  const resvSave = row.querySelector('[data-resv-save]');
+  if (resvSave) resvSave.onclick = () => saveReservation(d.mac);
+  const resvCancel = row.querySelector('[data-resv-cancel]');
+  if (resvCancel) resvCancel.onclick = () => { reservationEdits.delete(d.mac); renderDevices(); };
+}
+
+async function saveReservation(mac) {
+  const ip = (reservationEdits.get(mac) || '').trim();
+  if (!ip) { reservationEdits.delete(mac); renderDevices(); return; }
+  const r = await window.api.setReservation(mac, ip);
+  if (r.ok) {
+    reservationEdits.delete(mac);
+    showToast('★ RESERVED ' + ip + ' FOR ' + mac.toUpperCase());
+  } else {
+    showToast('⚠ ' + r.msg, 'err');
+  }
+}
+
+// Live countdown / ago tick
+setInterval(() => {
+  document.querySelectorAll('[data-expires]').forEach(el => {
+    el.textContent = fmtExpiry(parseInt(el.dataset.expires));
+  });
+  document.querySelectorAll('[data-ago]').forEach(el => {
+    el.textContent = ago(parseInt(el.dataset.ago));
+  });
+}, 1000);
+
+// ── TOOLBAR ───────────────────────────────────────────────────────────────────
 btnReleaseAll.onclick = async () => {
-  if (!serverRunning || leases.length === 0) return;
-  await window.api.releaseAll();
+  const n = await window.api.releaseAll();
+  if (n > 0) showToast('✕ RELEASED ' + n + ' LEASE' + (n !== 1 ? 'S' : ''));
 };
 
 btnExportCsv.onclick = async () => {
@@ -562,270 +1504,44 @@ btnCopyLog.onclick = async () => {
   showToast('⎘ Log copied to clipboard');
 };
 
-// ── Adapter polling ───────────────────────────────────────────────────────────
-window.api.onAdapterState(data => {
-  if (data.event === 'poll' && data.adapters) {
-    const cur = adapterSel.value;
-    adapterSel.innerHTML = '<option value="">— select adapter —</option>';
-    for (const a of data.adapters) {
-      const opt = document.createElement('option');
-      opt.value = a.name;
-      opt.textContent = a.name + (a.ip ? '  [' + a.ip + ']' : '  [no link]');
-      if (a.name === cur) opt.selected = true;
-      adapterSel.appendChild(opt);
-    }
-    updateStatus(data.adapters);
-  }
-  if (data.event === 'link-up')   { showToast('⚡ LINK UP — ' + data.name); log('Link UP: ' + data.name, 'warn'); }
-  if (data.event === 'link-down') { log('Link DOWN: ' + data.name, 'err'); }
-});
-
-function updateStatus(adapters) {
-  const a = adapters ? adapters.find(x => x.name === adapterSel.value) : null;
-  if (!a) { statusDot.className = 'status-dot'; statusTxt.textContent = 'NO LINK'; return; }
-  statusDot.className = a.connected ? 'status-dot active' : 'status-dot';
-  statusTxt.textContent = a.connected ? 'LINK UP' : 'NO LINK';
-}
-
-// Auto-populate config when adapter is selected
-adapterSel.onchange = async () => {
-  window.api.getAdapters().then(updateStatus);
-  if (!adapterSel.value || serverRunning) return;
-  const cfg = await window.api.getAdapterConfig(adapterSel.value);
-  if (!cfg) return;
-  document.getElementById('cfgServerIp').value   = cfg.serverIp;
-  document.getElementById('cfgSubnet').value     = cfg.subnet;
-  document.getElementById('cfgRangeStart').value = cfg.rangeStart;
-  document.getElementById('cfgRangeEnd').value   = cfg.rangeEnd;
-  document.getElementById('cfgGateway').value    = cfg.gateway || '';
-  document.getElementById('cfgDns').value        = cfg.dns || '';
-  clearFieldErrors();
-  log('Config auto-populated from adapter', 'info');
-};
-
-// ── Start / Stop ──────────────────────────────────────────────────────────────
-btnServer.onclick = async () => {
-  if (serverRunning) {
-    await window.api.stopDhcp();
-    serverRunning = false;
-    btnServer.className   = 'server-btn start';
-    btnServer.textContent = '⚡ START DHCP SERVER';
-    stopExpiryTick();
-    log('Server stopped', 'warn');
-    return;
-  }
-
-  if (!adapterSel.value) {
-    log('Select a network adapter before starting', 'err');
-    return;
-  }
-
-  const adapterIp  = document.getElementById('cfgServerIp').value.trim();
-  const subnet     = document.getElementById('cfgSubnet').value.trim();
-  const rangeStart = document.getElementById('cfgRangeStart').value.trim();
-  const rangeEnd   = document.getElementById('cfgRangeEnd').value.trim();
-  const gateway    = document.getElementById('cfgGateway').value.trim();
-  const dns        = document.getElementById('cfgDns').value.trim();
-  const leaseSecs  = Math.max(30, parseInt(document.getElementById('cfgLease').value.trim()) || 300);
-
-  clearFieldErrors();
-
-  const v = await window.api.validateConfig({ adapterIp, subnet, rangeStart, rangeEnd, gateway, dns });
-  if (!v.ok) {
-    log('Config error: ' + v.msg, 'err');
-    highlightFieldError(v.msg);
-    return;
-  }
-
-  log('Starting DHCP server...', 'info');
-  const r = await window.api.startDhcp({ adapterName: adapterSel.value, adapterIp, subnet, rangeStart, rangeEnd, gateway, dns, lease: leaseSecs });
-  if (r.ok) {
-    serverRunning = true;
-    btnServer.className   = 'server-btn stop';
-    btnServer.textContent = '■ STOP DHCP SERVER';
-    startExpiryTick();
-  } else {
-    log('Failed: ' + r.msg, 'err');
-  }
-};
-
-function highlightFieldError(msg) {
-  const m = msg.toLowerCase();
-  if (m.includes('server ip'))  document.getElementById('fldServerIp').classList.add('error');
-  if (m.includes('subnet'))     document.getElementById('fldSubnet').classList.add('error');
-  if (m.includes('pool start')) document.getElementById('fldRangeStart').classList.add('error');
-  if (m.includes('pool end'))   document.getElementById('fldRangeEnd').classList.add('error');
-  if (m.includes('gateway'))    document.getElementById('fldGateway').classList.add('error');
-  if (m.includes('dns'))        document.getElementById('fldDns').classList.add('error');
-  if (m.includes('pool') && m.includes('less')) {
-    document.getElementById('fldRangeStart').classList.add('error');
-    document.getElementById('fldRangeEnd').classList.add('error');
-  }
-}
-
-function clearFieldErrors() {
-  ['fldServerIp','fldSubnet','fldRangeStart','fldRangeEnd','fldGateway','fldDns','fldLease'].forEach(id =>
-    document.getElementById(id).classList.remove('error')
-  );
-}
-
-// ── Lease events from main ────────────────────────────────────────────────────
-window.api.onStatus(data => {
-  if (data.active) log('DHCP active — ' + data.adapterIp + '  pool ' + data.rangeStart + '–' + data.rangeEnd, 'ok');
-  else             { leases = []; renderLeases(); }
-});
-
-window.api.onLease(data => {
-  const idx = leases.findIndex(l => l.mac === data.mac);
-  if (idx >= 0) leases[idx] = data; else leases.push(data);
-  renderLeases();
-  const label = data.hostname ? data.hostname : data.vendor;
-  log('Lease → ' + data.ip + '  ' + data.mac + '  ' + data.vendor + (data.hostname ? '  ' + data.hostname : ''), 'ok');
-  showToast('📶 ' + data.ip + ' — ' + label);
-});
-
-window.api.onLeasesUpdated(list => {
-  leases = list;
-  renderLeases();
-});
-
-// ── Lease rendering ───────────────────────────────────────────────────────────
-function fmtExpiry(expires) {
-  if (!expires) return '—';
-  const secs = Math.max(0, Math.round((expires - Date.now()) / 1000));
-  if (secs <= 0) return 'EXP';
-  const m = Math.floor(secs / 60), s = secs % 60;
-  return m > 0 ? `${m}m ${s}s` : `${s}s`;
-}
-
-function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-function renderLeases() {
-  leaseCount.textContent = leases.length;
-  const hasLeases = leases.length > 0;
-  btnReleaseAll.disabled = !serverRunning || !hasLeases;
-  btnExportCsv.disabled  = !hasLeases;
-  if (!leases.length) {
-    leaseList.innerHTML = '<div class="empty-state"><div class="empty-icon">📡</div><div class="empty-text">WAITING FOR DEVICES</div></div>';
-    return;
-  }
-  leaseList.innerHTML = '';
-  for (const l of leases) {
-    const row = document.createElement('div');
-    row.className = 'lease-row';
-    row.dataset.mac = l.mac;
-    const hostname = esc(l.hostname || '—');
-    const ip       = esc(l.ip);
-    const mac      = esc(l.mac);
-    const vendor   = esc(l.vendor || '—');
-    row.innerHTML =
-      '<div class="lease-ip">' +
-        '<span class="copy-val">' + ip + '</span> ' +
-        '<button class="btn-copy" data-copy="' + ip + '">⎘</button>' +
-      '</div>' +
-      '<div class="lease-mac">' +
-        '<span class="copy-val">' + mac + '</span> ' +
-        '<button class="btn-copy" data-copy="' + mac + '">⎘</button>' +
-      '</div>' +
-      '<div class="lease-vendor">' + vendor + '</div>' +
-      '<div class="lease-hostname">' + hostname + '</div>' +
-      '<div class="lease-expiry" data-expires="' + (l.expires || 0) + '">' + fmtExpiry(l.expires) + '</div>' +
-      '<div style="display:flex;gap:4px;">' +
-        '<button class="btn-open" data-ip="' + ip + '">OPEN</button>' +
-        '<button class="btn-revoke" data-mac="' + mac + '">✕</button>' +
-      '</div>';
-    leaseList.appendChild(row);
-  }
-  leaseList.querySelectorAll('.btn-open').forEach(b => {
-    b.onclick = () => window.api.openBrowser(b.dataset.ip);
-  });
-  leaseList.querySelectorAll('.btn-revoke').forEach(b => {
-    b.onclick = async () => {
-      const r = await window.api.revokeLease(b.dataset.mac);
-      if (r.ok) log('Revoked ' + r.ip, 'warn');
-    };
-  });
-  leaseList.querySelectorAll('.btn-copy').forEach(b => {
-    b.onclick = () => {
-      navigator.clipboard.writeText(b.dataset.copy).then(() => {
-        b.textContent = '✓';
-        b.classList.add('copied');
-        setTimeout(() => { b.textContent = '⎘'; b.classList.remove('copied'); }, 1500);
-      });
-    };
-  });
-}
-
-// Live expiry countdown tick
-function startExpiryTick() {
-  stopExpiryTick();
-  expiryTickTimer = setInterval(() => {
-    document.querySelectorAll('.lease-expiry[data-expires]').forEach(el => {
-      el.textContent = fmtExpiry(parseInt(el.dataset.expires));
-    });
-  }, 1000);
-}
-
-function stopExpiryTick() {
-  if (expiryTickTimer) { clearInterval(expiryTickTimer); expiryTickTimer = null; }
-}
-
-// ── Log ───────────────────────────────────────────────────────────────────────
-window.api.onLog(data => log(data.msg));
-
-function log(msg, cls='') {
-  const d = document.createElement('div');
-  if (cls) d.className = cls;
-  d.textContent = '› ' + msg;
-  logStrip.appendChild(d);
-  while (logStrip.children.length > 150) logStrip.removeChild(logStrip.firstChild);
-  logStrip.scrollTop = logStrip.scrollHeight;
-}
-
-// ── Toast ─────────────────────────────────────────────────────────────────────
-let toastTimer = null;
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.style.display = 'block';
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { t.style.display = 'none'; }, 4000);
-}
-
-// ── Init ──────────────────────────────────────────────────────────────────────
+// ── INIT ──────────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   loadSavedTheme();
   renderPaletteSwatches();
-  renderLeases();
+  renderModeBadge();
+  renderServerButton();
+  renderDevices();
 
-  // Inject version from package.json
   try {
     const ver = await window.api.getVersion();
     document.getElementById('verLabel').textContent = 'v' + ver;
   } catch {}
 
-  // Restore saved config
+  try {
+    const idle = await window.api.getIdleMinutes();
+    document.getElementById('cfgIdle').value = idle;
+  } catch {}
+
+  await refreshProfiles();
+
   try {
     const saved = await window.api.loadConfig();
     if (saved) {
-      if (saved.adapterIp)  document.getElementById('cfgServerIp').value   = saved.adapterIp;
-      if (saved.subnet)     document.getElementById('cfgSubnet').value     = saved.subnet;
-      if (saved.rangeStart) document.getElementById('cfgRangeStart').value = saved.rangeStart;
-      if (saved.rangeEnd)   document.getElementById('cfgRangeEnd').value   = saved.rangeEnd;
-      if (saved.gateway)    document.getElementById('cfgGateway').value    = saved.gateway;
-      if (saved.dns)        document.getElementById('cfgDns').value        = saved.dns;
-      if (saved.lease)      document.getElementById('cfgLease').value      = saved.lease;
-      if (saved.adapter) {
-        // Try to pre-select the adapter once polling fills the dropdown
+      fillConfig(saved);
+      if (saved.adapterName || saved.adapter) {
+        const want = saved.adapterName || saved.adapter;
         const trySelect = setInterval(() => {
           const opts = Array.from(adapterSel.options);
-          const match = opts.find(o => o.value === saved.adapter);
-          if (match) { adapterSel.value = saved.adapter; clearInterval(trySelect); }
+          const match = opts.find(o => o.value === want);
+          if (match) { adapterSel.value = want; clearInterval(trySelect); }
         }, 500);
         setTimeout(() => clearInterval(trySelect), 10000);
       }
-      log('Config restored from last session', 'info');
+      log('Settings restored from last session', 'info');
     }
   } catch {}
+
+  schedulePreview();
 });
 </script>
 </body>

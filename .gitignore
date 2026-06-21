@@ -1,5 +1,8 @@
 node_modules/
 dist/
+*.exe
+*.msi
+*.7z
 *.log
 .env
 CLAUDE.md
