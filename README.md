@@ -1,3 +1,6 @@
+> **NET//DHCP is now part of NET//ETHER.** As of NET//ETHER v7.0.0 (September 2026) the DHCP server lives in the DHCP tab of the unified app — same engine, on ETHER's elevated path, with the diagnostics log. This repository is archived and kept for history; v3.0.4 is the last standalone release.
+>
+> → https://github.com/mehanem-web/net-ether
 # NET//DHCP v3.0
 
 **Listen-first DHCP with targeted serve & device discovery — Broman Enterprises**
